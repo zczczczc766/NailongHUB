@@ -31,180 +31,134 @@ task=tasklib
 
 local A=game:GetService("StarterGui")
 
--- 启动动画：完全替代原来的系统弹窗
-local Startup = {}
-Startup.Progress = 0
-Startup.Target = 0
-Startup.Alive = true
+-- 启动动画（安全版）：所有创建操作都放在 pcall 中，避免启动动画导致整个脚本停止
+local Startup = {Alive=true, Progress=0}
+local startupUI = nil
 
 local function createStartup()
-    local Players = game:GetService("Players")
-    local TweenService = game:GetService("TweenService")
-    local player = Players.LocalPlayer
-    local parent = player and player:FindFirstChildOfClass("PlayerGui")
-    if not parent then return nil end
+    local ok, result = pcall(function()
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+        if not player then return nil end
+        local parent = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui",5)
+        if not parent then return nil end
 
-    local old = parent:FindFirstChild("NailongHubStartup")
-    if old then old:Destroy() end
+        local old = parent:FindFirstChild("NailongHubStartup")
+        if old then old:Destroy() end
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "NailongHubStartup"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.DisplayOrder = 1000000
-    gui.Parent = parent
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "NailongHubStartup"
+        gui.IgnoreGuiInset = true
+        gui.ResetOnSpawn = false
+        gui.DisplayOrder = 2147483647
+        gui.Parent = parent
 
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.fromScale(1,1)
-    bg.BackgroundColor3 = Color3.fromRGB(24,20,8)
-    bg.BackgroundTransparency = 0.08
-    bg.BorderSizePixel = 0
-    bg.Parent = gui
+        local bg = Instance.new("Frame")
+        bg.Size = UDim2.fromScale(1,1)
+        bg.BackgroundColor3 = Color3.fromRGB(10,10,10)
+        bg.BackgroundTransparency = 0.18
+        bg.BorderSizePixel = 0
+        bg.Parent = gui
 
-    local panel = Instance.new("Frame")
-    panel.AnchorPoint = Vector2.new(0.5,0.5)
-    panel.Position = UDim2.fromScale(0.5,0.5)
-    panel.Size = UDim2.fromOffset(330,330)
-    panel.BackgroundColor3 = Color3.fromRGB(24,20,8)
-    panel.BackgroundTransparency = 0.12
-    panel.BorderSizePixel = 0
-    panel.Parent = bg
-    Instance.new("UICorner",panel).CornerRadius = UDim.new(0,18)
+        local panel = Instance.new("Frame")
+        panel.AnchorPoint = Vector2.new(0.5,0.5)
+        panel.Position = UDim2.fromScale(0.5,0.5)
+        panel.Size = UDim2.fromOffset(340,300)
+        panel.BackgroundColor3 = Color3.fromRGB(24,20,8)
+        panel.BorderSizePixel = 0
+        panel.Parent = bg
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0,16)
+        corner.Parent = panel
 
-    -- 与主 UI 相同的动态金黄色边框
-    local stroke = Instance.new("UIStroke")
-    stroke.Name = "GoldStroke"
-    stroke.Thickness = 2
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Parent = panel
+        -- 与主 UI 同款金黄色边框
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(255,190,0)
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Parent = panel
 
-    local strokeGradient = Instance.new("UIGradient")
-    strokeGradient.Name = "DynamicGoldGradient"
-    strokeGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0,Color3.fromRGB(255,170,0)),
-        ColorSequenceKeypoint.new(0.25,Color3.fromRGB(255,220,80)),
-        ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,245,160)),
-        ColorSequenceKeypoint.new(0.75,Color3.fromRGB(255,200,20)),
-        ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0))
-    })
-    strokeGradient.Parent = stroke
+        local icon = Instance.new("ImageLabel")
+        icon.AnchorPoint = Vector2.new(0.5,0.5)
+        icon.Position = UDim2.fromScale(0.5,0.30)
+        icon.Size = UDim2.fromOffset(115,115)
+        icon.BackgroundTransparency = 1
+        icon.Image = "rbxassetid://118156660240152"
+        icon.ScaleType = Enum.ScaleType.Fit
+        icon.Parent = panel
 
-    task.spawn(function()
-        while stroke.Parent and Startup.Alive do
-            strokeGradient.Rotation = (strokeGradient.Rotation + 2) % 360
-            task.wait(0.015)
-        end
+        local title = Instance.new("TextLabel")
+        title.AnchorPoint = Vector2.new(0.5,0)
+        title.Position = UDim2.fromScale(0.5,0.52)
+        title.Size = UDim2.fromOffset(310,35)
+        title.BackgroundTransparency = 1
+        title.Text = "正在加载奶龙HUB"
+        title.TextColor3 = Color3.fromRGB(255,220,90)
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 22
+        title.Parent = panel
+
+        local barBack = Instance.new("Frame")
+        barBack.AnchorPoint = Vector2.new(0.5,0)
+        barBack.Position = UDim2.fromScale(0.5,0.68)
+        barBack.Size = UDim2.fromOffset(260,7)
+        barBack.BackgroundColor3 = Color3.fromRGB(65,50,15)
+        barBack.BorderSizePixel = 0
+        barBack.Parent = panel
+        local barBackCorner = Instance.new("UICorner")
+        barBackCorner.CornerRadius = UDim.new(1,0)
+        barBackCorner.Parent = barBack
+
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.fromScale(0,1)
+        bar.BackgroundColor3 = Color3.fromRGB(255,190,0)
+        bar.BorderSizePixel = 0
+        bar.Parent = barBack
+        local barCorner = Instance.new("UICorner")
+        barCorner.CornerRadius = UDim.new(1,0)
+        barCorner.Parent = bar
+
+        local percent = Instance.new("TextLabel")
+        percent.AnchorPoint = Vector2.new(0.5,0)
+        percent.Position = UDim2.fromScale(0.5,0.74)
+        percent.Size = UDim2.fromOffset(260,25)
+        percent.BackgroundTransparency = 1
+        percent.Text = "0%"
+        percent.TextColor3 = Color3.fromRGB(235,220,175)
+        percent.Font = Enum.Font.Gotham
+        percent.TextSize = 13
+        percent.Parent = panel
+
+        return {Gui=gui,Panel=panel,Icon=icon,Title=title,Bar=bar,Percent=percent,Stroke=stroke}
     end)
-
-    local icon = Instance.new("ImageLabel")
-    icon.AnchorPoint = Vector2.new(0.5,0.5)
-    icon.Position = UDim2.fromScale(0.5,0.31)
-    icon.Size = UDim2.fromOffset(125,125)
-    icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://118156660240152"
-    icon.ScaleType = Enum.ScaleType.Fit
-    icon.ImageTransparency = 1
-    icon.Parent = panel
-
-    local iconStroke = Instance.new("UIStroke")
-    iconStroke.Thickness = 2
-    iconStroke.Color = Color3.fromRGB(255,190,0)
-    iconStroke.Transparency = 1
-    iconStroke.Parent = icon
-
-    local title = Instance.new("TextLabel")
-    title.AnchorPoint = Vector2.new(0.5,0)
-    title.Position = UDim2.fromScale(0.5,0.56)
-    title.Size = UDim2.fromOffset(290,40)
-    title.BackgroundTransparency = 1
-    title.Text = "正在加载奶龙HUB"
-    title.TextColor3 = Color3.fromRGB(255,225,130)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 23
-    title.TextTransparency = 1
-    title.Parent = panel
-
-    local barBack = Instance.new("Frame")
-    barBack.AnchorPoint = Vector2.new(0.5,0)
-    barBack.Position = UDim2.fromScale(0.5,0.70)
-    barBack.Size = UDim2.fromOffset(250,7)
-    barBack.BackgroundColor3 = Color3.fromRGB(70,52,12)
-    barBack.BackgroundTransparency = 1
-    barBack.BorderSizePixel = 0
-    barBack.Parent = panel
-    Instance.new("UICorner",barBack).CornerRadius = UDim.new(1,0)
-
-    local bar = Instance.new("Frame")
-    bar.Size = UDim2.fromScale(0,1)
-    bar.BackgroundColor3 = Color3.fromRGB(255,190,0)
-    bar.BackgroundTransparency = 1
-    bar.BorderSizePixel = 0
-    bar.Parent = barBack
-    Instance.new("UICorner",bar).CornerRadius = UDim.new(1,0)
-
-    local percent = Instance.new("TextLabel")
-    percent.AnchorPoint = Vector2.new(0.5,0)
-    percent.Position = UDim2.fromScale(0.5,0.74)
-    percent.Size = UDim2.fromOffset(250,25)
-    percent.BackgroundTransparency = 1
-    percent.Text = "0%"
-    percent.TextColor3 = Color3.fromRGB(235,220,175)
-    percent.Font = Enum.Font.Gotham
-    percent.TextSize = 13
-    percent.TextTransparency = 1
-    percent.Parent = panel
-
-    local function tween(obj,time,props)
-        TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props):Play()
-    end
-
-    tween(icon,0.35,{ImageTransparency=0})
-    tween(iconStroke,0.35,{Transparency=0})
-    tween(title,0.35,{TextTransparency=0})
-    tween(barBack,0.35,{BackgroundTransparency=0})
-    tween(bar,0.35,{BackgroundTransparency=0})
-    tween(percent,0.35,{TextTransparency=0})
-
-    return {Gui=gui,Panel=panel,Icon=icon,Title=title,Bar=bar,Percent=percent,Stroke=stroke,Gradient=strokeGradient}
+    if ok then return result end
+    return nil
 end
 
-local startupUI = createStartup()
+startupUI = createStartup()
 
 local function setStartupProgress(value)
-    value = math.clamp(math.floor(value + 0.5),0,100)
-    Startup.Progress = value
+    value = math.floor((tonumber(value) or 0)+0.5)
+    if value < 0 then value=0 end
+    if value > 100 then value=100 end
+    Startup.Progress=value
     if not startupUI or not startupUI.Gui or not startupUI.Gui.Parent then return end
-    startupUI.Bar.Size = UDim2.fromScale(value/100,1)
-    startupUI.Percent.Text = tostring(value).."%"
-end
-
--- 加载过程中最多到 95%，只有整个主脚本 xpcall 成功结束后才会到 100%
-if startupUI then
-    task.spawn(function()
-        local p = 0
-        while Startup.Alive and p < 95 do
-            task.wait(0.08)
-            if p < 60 then
-                p = p + 2
-            elseif p < 85 then
-                p = p + 1
-            else
-                p = p + 0.25
-            end
-            setStartupProgress(math.min(p,95))
-        end
+    pcall(function()
+        startupUI.Bar.Size=UDim2.fromScale(value/100,1)
+        startupUI.Percent.Text=tostring(value).."%"
     end)
 end
 
+-- 进度只负责显示“当前阶段”；不会提前到100%
+setStartupProgress(3)
+
 pcall(function()
-    local startupSound = Instance.new("Sound")
-    startupSound.Name = "奶龙_HUB_StartupSound"
-    startupSound.SoundId = "rbxassetid://84267705669861"
-    startupSound.Volume = 5
-    startupSound.Looped = false
-    startupSound.Parent = game:GetService("SoundService")
-    startupSound:Play()
-    startupSound.Ended:Connect(function() startupSound:Destroy() end)
+    local sound=Instance.new("Sound")
+    sound.SoundId="rbxassetid://84267705669861"
+    sound.Volume=5
+    sound.Parent=game:GetService("SoundService")
+    sound:Play()
+    sound.Ended:Connect(function() sound:Destroy() end)
 end)
 
 local ok,err=xpcall(function()
@@ -253,6 +207,8 @@ for _,url in ipairs(winduiUrls) do
     task.wait(0.25)
 end
 
+setStartupProgress(25)
+
 if not B then
     pcall(function()
         A:SetCore("SendNotification",{Title="WindUI加载失败",Text="请检查Delta网络/HttpGet支持",Duration=5})
@@ -280,6 +236,8 @@ end)
 
 
 local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
+setStartupProgress(50)
+
 C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
 local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
@@ -3014,6 +2972,8 @@ end)
 end,function(e)
     safeNotify("ink_HUB错误",tostring(e):sub(1,100),5)
 end)
+setStartupProgress(90)
+
 end,function(e)
     Startup.Alive = false
     if startupUI and startupUI.Gui and startupUI.Gui.Parent then
