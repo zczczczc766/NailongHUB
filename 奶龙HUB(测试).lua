@@ -63,30 +63,25 @@ pcall(function()
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
-    local glow = Instance.new("Frame")
-    glow.AnchorPoint = Vector2.new(0.5,0.5)
-    glow.Position = UDim2.fromScale(0.5,0.42)
-    glow.Size = UDim2.fromOffset(250,250)
-    glow.BackgroundColor3 = Color3.fromRGB(255,190,0)
-    glow.BackgroundTransparency = 0.88
-    glow.BorderSizePixel = 0
-    glow.Parent = bg
-    Instance.new("UICorner",glow).CornerRadius = UDim.new(1,0)
-
     local icon = Instance.new("ImageLabel")
     icon.Name = "CenterIcon"
     icon.AnchorPoint = Vector2.new(0.5,0.5)
     icon.Position = UDim2.fromScale(0.5,0.42)
-    icon.Size = UDim2.fromOffset(112,112)
+    icon.Size = UDim2.fromOffset(150,150)
     icon.BackgroundTransparency = 1
     icon.Image = "rbxassetid://118156660240152"
     icon.ImageTransparency = 1
     icon.ScaleType = Enum.ScaleType.Fit
     icon.Parent = bg
 
-    local iconCorner = Instance.new("UICorner")
-    iconCorner.CornerRadius = UDim.new(1,0)
-    iconCorner.Parent = icon
+    -- 中心图片保持正方形，并使用金黄色边框
+    local iconStroke = Instance.new("UIStroke")
+    iconStroke.Name = "GoldImageBorder"
+    iconStroke.Thickness = 3
+    iconStroke.Color = Color3.fromRGB(255,195,0)
+    iconStroke.Transparency = 0
+    iconStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    iconStroke.Parent = icon
 
     local title = Instance.new("TextLabel")
     title.AnchorPoint = Vector2.new(0.5,0)
