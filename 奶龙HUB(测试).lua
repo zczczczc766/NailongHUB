@@ -66,8 +66,8 @@ pcall(function()
     local icon = Instance.new("ImageLabel")
     icon.Name = "CenterIcon"
     icon.AnchorPoint = Vector2.new(0.5,0.5)
-    icon.Position = UDim2.fromScale(0.5,0.42)
-    icon.Size = UDim2.fromOffset(150,150)
+    icon.Position = UDim2.fromScale(0.5,0.40)
+    icon.Size = UDim2.fromOffset(190,190)
     icon.BackgroundTransparency = 1
     icon.Image = "rbxassetid://118156660240152"
     icon.ImageTransparency = 1
@@ -77,7 +77,7 @@ pcall(function()
     -- 中心图片保持正方形，并使用金黄色边框
     local iconStroke = Instance.new("UIStroke")
     iconStroke.Name = "GoldImageBorder"
-    iconStroke.Thickness = 3
+    iconStroke.Thickness = 4
     iconStroke.Color = Color3.fromRGB(255,195,0)
     iconStroke.Transparency = 0
     iconStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -85,32 +85,32 @@ pcall(function()
 
     local title = Instance.new("TextLabel")
     title.AnchorPoint = Vector2.new(0.5,0)
-    title.Position = UDim2.fromScale(0.5,0.55)
-    title.Size = UDim2.fromOffset(500,48)
+    title.Position = UDim2.fromScale(0.5,0.57)
+    title.Size = UDim2.fromOffset(600,58)
     title.BackgroundTransparency = 1
-    title.Text = "奶龙_HUB"
+    title.Text = "正在加载 奶龙_HUB"
     title.TextColor3 = Color3.fromRGB(255,220,100)
     title.TextTransparency = 1
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 30
+    title.TextSize = 36
     title.Parent = bg
 
     local sub = Instance.new("TextLabel")
     sub.AnchorPoint = Vector2.new(0.5,0)
-    sub.Position = UDim2.fromScale(0.5,0.625)
-    sub.Size = UDim2.fromOffset(500,30)
+    sub.Position = UDim2.fromScale(0.5,0.65)
+    sub.Size = UDim2.fromOffset(600,36)
     sub.BackgroundTransparency = 1
     sub.Text = "正在初始化..."
     sub.TextColor3 = Color3.fromRGB(235,220,175)
     sub.TextTransparency = 1
     sub.Font = Enum.Font.Gotham
-    sub.TextSize = 15
+    sub.TextSize = 18
     sub.Parent = bg
 
     local barBack = Instance.new("Frame")
     barBack.AnchorPoint = Vector2.new(0.5,0)
-    barBack.Position = UDim2.fromScale(0.5,0.70)
-    barBack.Size = UDim2.fromOffset(260,5)
+    barBack.Position = UDim2.fromScale(0.5,0.74)
+    barBack.Size = UDim2.fromOffset(360,7)
     barBack.BackgroundColor3 = Color3.fromRGB(65,52,20)
     barBack.BackgroundTransparency = 1
     barBack.BorderSizePixel = 0
