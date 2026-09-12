@@ -154,7 +154,7 @@ pcall(function()
     title.Position = UDim2.fromScale(0.5,0.57)
     title.Size = UDim2.fromOffset(700,68)
     title.BackgroundTransparency = 1
-    title.Text = "奶龙_HUB"
+    title.Text = "正在加载 奶龙_HUB"
     title.TextColor3 = Color3.fromRGB(255,220,100)
     title.TextTransparency = 1
     title.Font = Enum.Font.GothamBold
