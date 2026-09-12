@@ -63,7 +63,6 @@ pcall(function()
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
-    -- 周围黄色动态圆圈装饰：数量更多、尺寸更大，并从中心向外扩散
     local decorLayer = Instance.new("Frame")
     decorLayer.Name = "GoldCircleDecorations"
     decorLayer.AnchorPoint = Vector2.new(0.5,0.5)
@@ -130,7 +129,6 @@ pcall(function()
         end
     end)
 
-    -- 再加两层缓慢旋转的淡金色大圆环，增强外围动态感
     for _,ringData in ipairs({{size=410,thickness=2,trans=0.72},{size=500,thickness=2,trans=0.82}}) do
         local ring=Instance.new("Frame")
         ring.AnchorPoint=Vector2.new(0.5,0.5)
@@ -175,7 +173,7 @@ pcall(function()
     title.Position = UDim2.fromScale(0.5,0.57)
     title.Size = UDim2.fromOffset(700,68)
     title.BackgroundTransparency = 1
-    title.Text = "奶龙_HUB"
+    title.Text = "正在加载 奶龙_HUB"
     title.TextColor3 = Color3.fromRGB(255,220,100)
     title.TextTransparency = 1
     title.Font = Enum.Font.GothamBold
@@ -332,7 +330,6 @@ end
 
 pcall(function() B.Transparency=0.3 end)
 
--- 金黄色主题：让整个 WindUI 界面统一使用金色系
 pcall(function()
     B:AddTheme({
         Name = "奶龙_Gold",
@@ -362,7 +359,6 @@ if windowFrame then
     stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
     stroke.Parent=windowFrame
 
-    -- 动态金黄色边框：沿边框持续旋转
     local strokeGradient=Instance.new("UIGradient")
     strokeGradient.Name="DynamicGoldGradient"
     strokeGradient.Color=ColorSequence.new({
@@ -3078,16 +3074,15 @@ end})
 
 task.spawn(function()
     pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/ink/refs/heads/main/%E4%BD%9C%E8%80%85%E6%A3%80%E6%B5%8B.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/NailongHUB/refs/heads/main/%E4%BD%9C%E8%80%85%E6%A3%80%E6%B5%8B.lua"))()
     end)
 end)
 
--- 所有主脚本代码执行到这里后，才结束启动动画
 if finishStartup then
     task.spawn(finishStartup)
 end
 
 end,function(e)
     if finishStartup then pcall(finishStartup) end
-    safeNotify("ink_HUB错误",tostring(e):sub(1,100),5)
+    safeNotify("奶龙_HUB错误",tostring(e):sub(1,100),5)
 end)
