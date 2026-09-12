@@ -596,68 +596,38 @@ E:Toggle({
     end
 })
 
-local respawnAtPositionEnabled = false
-local respawnConnection = nil
-E:Toggle({
-    Title = "原地复活",
-    Value = false,
-    Callback = function(v)
-        respawnAtPositionEnabled = v
-        if v then
-            if respawnConnection then respawnConnection:Disconnect() end
-            local Players = game:GetService("Players")
-            local Player = Players.LocalPlayer
-            respawnConnection = Player.CharacterAdded:Connect(function(char)
-                if not respawnAtPositionEnabled then return end
-                local hum = char:WaitForChild("Humanoid", 10)
-                if not hum then return end
-                hum.Died:Connect(function()
-                    if not respawnAtPositionEnabled then return end
-                    task.delay(0.3, function()
-                        pcall(function()
-                            -- 记录死亡位置
-                            local savedCFrame
-                            pcall(function()
-                                if char and char:FindFirstChild("HumanoidRootPart") then
-                                    savedCFrame = char.HumanoidRootPart.CFrame
-                                end
-                            end)
-                            Player:LoadCharacter()
-                            -- 重生后传回原位
-                            task.spawn(function()
-                                local newChar = Player.Character or Player.CharacterAdded:Wait()
-                                local root = newChar:WaitForChild("HumanoidRootPart", 10)
-                                if not root then return end
-                                task.wait(0.5)
-                                if savedCFrame then
-                                    root.CFrame = savedCFrame + Vector3.new(0, 3, 0)
-                                    if newChar.PrimaryPart then
-                                        newChar:SetPrimaryPartCFrame(savedCFrame + Vector3.new(0, 3, 0))
-                                    end
-                                end
-                                local newHum = newChar:FindFirstChildOfClass("Humanoid")
-                                if newHum then newHum.Health = newHum.MaxHealth end
-                            end)
-                        end)
-                    end)
-                end)
-            end)
-            safeNotify("原地复活", "已开启，死亡后自动原地复活", 3)
-        else
-            if respawnConnection then
-                respawnConnection:Disconnect()
-                respawnConnection = nil
-            end
-            safeNotify("原地复活", "已关闭", 2)
-        end
-    end
-})
-
 E:Button({
-    Title = "甩飞所有人",
+    Title = "原地复活",
     Callback = function()
         pcall(function()
-            SkidFlingAll()
+            local Players = game:GetService("Players")
+            local Player = Players.LocalPlayer
+            if not Player then return end
+            local char = Player.Character
+            if not char then
+                Player:LoadCharacter()
+                safeNotify("原地复活", "已重生", 2)
+                return
+            end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local savedCFrame = root and root.CFrame
+            Player:LoadCharacter()
+            if savedCFrame then
+                spawn(function()
+                    local newChar = Player.Character or Player.CharacterAdded:Wait()
+                    local newRoot = newChar:WaitForChild("HumanoidRootPart", 10)
+                    if newRoot then
+                        wait(0.5)
+                        newRoot.CFrame = savedCFrame + Vector3.new(0, 3, 0)
+                        if newChar.PrimaryPart then
+                            newChar:SetPrimaryPartCFrame(savedCFrame + Vector3.new(0, 3, 0))
+                        end
+                        local newHum = newChar:FindFirstChildOfClass("Humanoid")
+                        if newHum then newHum.Health = newHum.MaxHealth end
+                    end
+                end)
+            end
+            safeNotify("原地复活", "已重生并回到原位", 3)
         end)
     end
 })
@@ -3199,120 +3169,6 @@ end)
 if finishStartup then
     task.spawn(finishStartup)
 end
-
--- ========== 甩飞所有人 (一次性使用) ==========
-local function SkidFlingAll()
-    local Players = game:GetService("Players")
-    local Player = Players.LocalPlayer
-    if not Player or not Player.Character then
-        safeNotify("甩飞所有人", "请先进入游戏/生成角色", 3)
-        return
-    end
-
-    local Message = function(_Title, _Text, Time)
-        safeNotify(_Title, _Text, Time or 3)
-    end
-
-    local Character = Player.Character
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-    local RootPart = Humanoid and Humanoid.RootPart
-    if not (Character and Humanoid and RootPart) then
-        return Message("Error Occurred", "自身角色未就绪", 5)
-    end
-
-    -- 保存原位以便结束后归位
-    getgenv().OldPos = RootPart.CFrame
-
-    local FPos = function(BasePart, Pos, Ang)
-        RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
-        Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
-        RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-        RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
-    end
-
-    local function flingOne(TargetPlayer)
-        local TCharacter = TargetPlayer and TargetPlayer.Character
-        if not TCharacter then return end
-        if TargetPlayer == Player then return end
-
-        local THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
-        local TRootPart = THumanoid and THumanoid.RootPart
-        local THead = TCharacter:FindFirstChild("Head")
-        local Accessory = TCharacter:FindFirstChildOfClass("Accessory")
-        local Handle = Accessory and Accessory:FindFirstChild("Handle")
-        if not TCharacter:FindFirstChildWhichIsA("BasePart") then return end
-
-        if THumanoid and THumanoid.Sit then return end
-
-        -- 摄像机跟随目标（便于触发物理）
-        if THead then workspace.CurrentCamera.CameraSubject = THead
-        elseif Handle then workspace.CurrentCamera.CameraSubject = Handle
-        elseif THumanoid and TRootPart then workspace.CurrentCamera.CameraSubject = THumanoid end
-
-        local BasePart = TRootPart or THead or Handle
-        if not BasePart then return end
-
-        local TimeToWait = 2
-        local Time = tick()
-        local Angle = 0
-
-        repeat
-            if not (RootPart and THumanoid and BasePart and BasePart.Parent) then break end
-            Angle = Angle + 100
-            local mv = (BasePart.Velocity.Magnitude < 50) and (THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25) or Vector3.new(0,0,0)
-
-            FPos(BasePart, CFrame.new(0, 1.5, 0) + mv, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-            FPos(BasePart, CFrame.new(0, -1.5, 0) + mv, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-            FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + mv, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-            FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + mv, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-            FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-            FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0)); task.wait()
-        until BasePart.Velocity.Magnitude > 500 or tick() > Time + TimeToWait
-
-        -- 给目标一个巨大的推动
-        local BV = Instance.new("BodyVelocity")
-        BV.Name = "EpixVel"
-        BV.Parent = BasePart
-        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
-        BV.MaxForce = Vector3.new(1/0, 1/0, 1/0)
-        task.wait(0.15)
-        BV:Destroy()
-    end
-
-    -- 关闭坠落销毁高度，防止被甩飞目标直接消失
-    getgenv().FPDH = workspace.FallenPartsDestroyHeight
-    workspace.FallenPartsDestroyHeight = 0/0
-
-    local count = 0
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            pcall(function() flingOne(p) end)
-            count = count + 1
-        end
-    end
-
-    -- 恢复设置 + 自身归位
-    workspace.FallenPartsDestroyHeight = getgenv().FPDH
-    workspace.CurrentCamera.CameraSubject = Humanoid
-    if RootPart and RootPart.Parent and getgenv().OldPos then
-        local start = tick()
-        repeat
-            if not RootPart.Parent then break end
-            RootPart.CFrame = getgenv().OldPos * CFrame.new(0, 0.5, 0)
-            Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, 0.5, 0))
-            Humanoid:ChangeState("GettingUp")
-            for _, x in pairs(Character:GetChildren()) do
-                if x:IsA("BasePart") then
-                    x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
-                end
-            end
-            task.wait()
-        until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25 or tick() > start + 5
-    end
-
-    Message("甩飞所有人", "已对 " .. count .. " 名玩家执行", 4)
-end
-getgenv().SkidFlingAll = SkidFlingAll
 
 -- ========== 原地复活 ==========
 -- 死亡后重新生成角色，并传送回死亡前的位置（保持原有速度/状态清零）
