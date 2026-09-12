@@ -1215,7 +1215,6 @@ local function isValidTarget(player)
         dir = dir.Unit * dist
 
         local params = RaycastParams.new()
-        -- 只检测"会挡子弹"的物理对象，忽略角色（自己、目标、其他玩家）
         local ignore = { LocalPlayer.Character, player.Character }
         for _, plr in pairs(game.Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
@@ -1228,8 +1227,6 @@ local function isValidTarget(player)
 
         local result = workspace:Raycast(origin, dir, params)
         if result then
-            -- 命中了某个实例：若它属于目标角色（头/躯干等），视为可见；
-            -- 否则就是被墙体/地形挡住，排除该目标。
             local hit = result.Instance
             if hit and hit ~= part and not hit:IsDescendantOf(player.Character) then
                 return false
