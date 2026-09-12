@@ -1173,12 +1173,16 @@ local Colors = {
     ["紫"] = Color3.fromRGB(183,0,255), ["彩色"] = nil,
 }
 
-local Circle
-pcall(function()
-    Circle = Drawing.new("Circle")
-    Circle.Filled = false
-    Circle.Visible = false
-end)
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Circle = Drawing.new("Circle")
+Circle.Filled = false
+Circle.Visible = false
+
+local function getCurrentCamera()
+    return workspace.CurrentCamera
+end
 
 local function getCircleColor()
     if AimbotSettings.CircleColor ~= "彩色" and Colors[AimbotSettings.CircleColor] then
@@ -1187,150 +1191,145 @@ local function getCircleColor()
     return Color3.fromHSV((tick() % 5) / 5, 1, 1)
 end
 
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-
 RunService.RenderStepped:Connect(function()
-    Camera = workspace.CurrentCamera or Camera
-    if Circle then
-        if AimbotSettings.CircleEnabled and Camera then
-            Circle.Visible = true
-            Circle.Position = Camera.ViewportSize / 2
-            Circle.Radius = AimbotSettings.CircleRadius
-            Circle.Thickness = AimbotSettings.CircleThickness
-            Circle.Color = getCircleColor()
-        else
-            Circle.Visible = false
-        end
+    local camera = getCurrentCamera()
+    if not camera then
+        Circle.Visible = false
+        return
+    end
+
+    if AimbotSettings.CircleEnabled then
+        Circle.Visible = true
+        Circle.Position = camera.ViewportSize / 2
+        Circle.Radius = AimbotSettings.CircleRadius
+        Circle.Thickness = AimbotSettings.CircleThickness
+        Circle.Color = getCircleColor()
+    else
+        Circle.Visible = false
     end
 end)
 
-local function isSameTeam(player)
-    if not AimbotSettings.TeamCheck then
-        return false
-    end
-
-    -- 两边都有 Team 时才进行队伍判断，避免 Team=nil 时把所有玩家误判成队友
-    local myTeam = LocalPlayer and LocalPlayer.Team
-    local targetTeam = player and player.Team
-    return myTeam ~= nil and targetTeam ~= nil and myTeam == targetTeam
-end
-
-local function isVisibleTarget(character, part)
-    if not AimbotSettings.WallCheck then
-        return true
-    end
-
-    if not Camera or not character or not part then
-        return false
-    end
-
-    local origin = Camera.CFrame.Position
-    local direction = part.Position - origin
-
-    if direction.Magnitude <= 0.01 then
-        return true
-    end
-
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Blacklist
-    params.FilterDescendantsInstances = {
-        LocalPlayer and LocalPlayer.Character
-    }
-    params.IgnoreWater = true
-
-    local result = workspace:Raycast(origin, direction, params)
-
-    -- 射线没有撞到东西，或者第一命中的物体属于目标角色，都算可见
-    if not result then
-        return true
-    end
-
-    return result.Instance and result.Instance:IsDescendantOf(character)
-end
-
 local function getTargetPart(character)
-    if not character then
-        return nil
-    end
+    if not character then return nil end
 
     local part = character:FindFirstChild(AimbotSettings.TargetPart)
     if part and part:IsA("BasePart") then
         return part
     end
 
-    -- 部位暂时不存在时进行兼容回退，避免 R6/R15 切换或角色刚生成时失效
-    if AimbotSettings.TargetPart == "Head" then
-        return character:FindFirstChild("HumanoidRootPart")
+    -- 目标部位暂时不存在时，避免自瞄线程报错
+    local fallback = character:FindFirstChild("Head")
+        or character:FindFirstChild("HumanoidRootPart")
+        or character:FindFirstChild("UpperTorso")
+        or character:FindFirstChild("Torso")
+
+    if fallback and fallback:IsA("BasePart") then
+        return fallback
     end
 
-    return character:FindFirstChild("Head")
+    return nil
 end
 
-local function isValidTarget(player)
+local function isSameTeam(player)
     if not player or player == LocalPlayer then
+        return true
+    end
+
+    -- 两个玩家都有 Team 时，直接按 Team 判断
+    if LocalPlayer.Team ~= nil and player.Team ~= nil then
+        return player.Team == LocalPlayer.Team
+    end
+
+    -- 某些游戏只正确设置 TeamColor，没有 Team 对象
+    if LocalPlayer.TeamColor ~= nil and player.TeamColor ~= nil then
+        return LocalPlayer.TeamColor == player.TeamColor
+    end
+
+    -- 游戏没有提供队伍信息时，不强行判定为同队
+    return false
+end
+
+local function isVisibleTarget(camera, targetPlayer, part)
+    if not AimbotSettings.WallCheck then
+        return true
+    end
+
+    if not camera or not part or not part.Parent then
         return false
     end
 
-    local character = player.Character
-    if not character then
+    local origin = camera.CFrame.Position
+    local direction = part.Position - origin
+
+    if direction.Magnitude <= 0 then
+        return true
+    end
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {LocalPlayer.Character}
+    params.IgnoreWater = true
+
+    local result = workspace:Raycast(origin, direction, params)
+
+    -- 没有命中障碍物，或者第一命中物属于目标角色，都算可见
+    if not result then
+        return true
+    end
+
+    return result.Instance:IsDescendantOf(targetPlayer.Character)
+end
+
+local function isValidTarget(player, camera)
+    if not player or player == LocalPlayer then return false end
+    if not player.Character then return false end
+
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+
+    if AimbotSettings.TeamCheck and isSameTeam(player) then
         return false
     end
 
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then
+    local part = getTargetPart(player.Character)
+    if not part then return false end
+
+    if not isVisibleTarget(camera, player, part) then
         return false
     end
 
-    if isSameTeam(player) then
-        return false
-    end
-
-    local part = getTargetPart(character)
-    if not part then
-        return false
-    end
-
-    if not isVisibleTarget(character, part) then
-        return false
-    end
-
-    return true
+    return true, part
 end
 
 local function getClosestInCircle()
-    if not Camera then
-        return nil
-    end
+    local camera = getCurrentCamera()
+    if not camera then return nil, nil end
 
     local closest = nil
+    local closestPart = nil
     local minDist = math.huge
-    local center = Camera.ViewportSize / 2
+    local center = camera.ViewportSize / 2
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if isValidTarget(player) then
-            local character = player.Character
-            local part = getTargetPart(character)
+        local valid, part = isValidTarget(player, camera)
 
-            if part then
-                local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+        if valid and part then
+            local pos, onScreen = camera:WorldToViewportPoint(part.Position)
 
-                if onScreen and pos.Z > 0 then
-                    local screenPos = Vector2.new(pos.X, pos.Y)
-                    local screenDist = (screenPos - center).Magnitude
+            if onScreen and pos.Z > 0 then
+                local screenDist = (Vector2.new(pos.X, pos.Y) - center).Magnitude
 
-                    if screenDist <= AimbotSettings.CircleRadius and screenDist < minDist then
-                        minDist = screenDist
-                        closest = player
-                    end
+                -- 自瞄始终使用圆圈范围；圆圈显示只是视觉开关
+                if screenDist <= AimbotSettings.CircleRadius and screenDist < minDist then
+                    minDist = screenDist
+                    closest = player
+                    closestPart = part
                 end
             end
         end
     end
 
-    return closest
+    return closest, closestPart
 end
 
 RunService.RenderStepped:Connect(function()
@@ -1338,63 +1337,70 @@ RunService.RenderStepped:Connect(function()
         return
     end
 
-    Camera = workspace.CurrentCamera or Camera
-    if not Camera then
-        return
-    end
+    local camera = getCurrentCamera()
+    if not camera then return end
 
-    local target = getClosestInCircle()
-    if not target or not target.Character then
-        return
-    end
+    local target, part = getClosestInCircle()
 
-    local part = getTargetPart(target.Character)
-    if not part then
-        return
+    if target and part and part.Parent then
+        camera.CFrame = CFrame.lookAt(camera.CFrame.Position, part.Position)
     end
-
-    -- 使用当前相机位置，只改变朝向，避免瞬间改变相机位置
-    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, part.Position)
 end)
 
-AimTab:Toggle({ Title = "开启自瞄", Value = false, Callback = function(state)
-    AimbotSettings.Enabled = state
-end })
+AimTab:Toggle({
+    Title = "开启自瞄",
+    Value = false,
+    Callback = function(s)
+        AimbotSettings.Enabled = s
+    end
+})
 
-AimTab:Toggle({ Title = "自瞄圆圈", Value = false, Callback = function(state)
-    AimbotSettings.CircleEnabled = state
-end })
+AimTab:Toggle({
+    Title = "自瞄圆圈",
+    Value = false,
+    Callback = function(s)
+        AimbotSettings.CircleEnabled = s
+    end
+})
 
 AimTab:Dropdown({
     Title = "瞄准部位",
     Values = { "Head", "HumanoidRootPart" },
     Value = "Head",
-    Callback = function(value)
-        AimbotSettings.TargetPart = value
+    Callback = function(v)
+        AimbotSettings.TargetPart = v
     end
 })
 
-AimTab:Toggle({ Title = "队伍检测", Value = false, Callback = function(state)
-    AimbotSettings.TeamCheck = state
-end })
+AimTab:Toggle({
+    Title = "队伍检测",
+    Value = false,
+    Callback = function(s)
+        AimbotSettings.TeamCheck = s
+    end
+})
 
-AimTab:Toggle({ Title = "墙体检测", Value = false, Callback = function(state)
-    AimbotSettings.WallCheck = state
-end })
+AimTab:Toggle({
+    Title = "墙体检测",
+    Value = false,
+    Callback = function(s)
+        AimbotSettings.WallCheck = s
+    end
+})
 
 AimTab:Slider({
     Title = "圆圈大小",
     Value = { Min = 30, Max = 500, Default = 100 },
-    Callback = function(value)
-        AimbotSettings.CircleRadius = value
+    Callback = function(v)
+        AimbotSettings.CircleRadius = v
     end
 })
 
 AimTab:Slider({
     Title = "圆圈厚度",
     Value = { Min = 1, Max = 10, Default = 2 },
-    Callback = function(value)
-        AimbotSettings.CircleThickness = value
+    Callback = function(v)
+        AimbotSettings.CircleThickness = v
     end
 })
 
@@ -1402,8 +1408,8 @@ AimTab:Dropdown({
     Title = "圆圈颜色",
     Values = { "红", "橙", "黄", "绿", "青", "蓝", "紫", "彩色" },
     Value = "彩色",
-    Callback = function(value)
-        AimbotSettings.CircleColor = value
+    Callback = function(v)
+        AimbotSettings.CircleColor = v
     end
 })
 
