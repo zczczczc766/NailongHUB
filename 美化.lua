@@ -57,7 +57,7 @@ if not B then
             Duration=5
         })
     end)
-    warn("[ink_美化] WindUI加载失败:", winduiLastError)
+    warn("[奶龙_美化] WindUI加载失败:", winduiLastError)
     return
 end
 
@@ -78,9 +78,9 @@ end)
 
 local C=B:CreateWindow({
     Icon="crown",
-    Title=gradient("ink_美化",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+    Title=gradient("奶龙_美化",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
     Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-    Folder="ink_美化",
+    Folder="奶龙_美化",
     Size=UDim2.fromOffset(520,410),
     Background="rbxassetid://118156660240152",
     BackgroundImageTransparency=0.25,
@@ -90,7 +90,7 @@ local C=B:CreateWindow({
     ScrollBarEnabled=true
 })
 C:EditOpenButton({
-    Title=gradient("ink_美化",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+    Title=gradient("奶龙_美化",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
     Icon="crown",
     StrokeThickness=2,
     Color=ColorSequence.new({
@@ -137,9 +137,9 @@ local D=C:Section({Title="功能菜单",Opened=true})
 
 local Z = D:Tab({Title="公告", Icon="bell"})
 Z:Paragraph({
-    Title = "欢迎使用 ink_美化",
+    Title = "欢迎使用 奶龙_美化",
     Desc = "作者：墨水依旧和司空\n墨水快手号:zczczczc766\n司空快手号:smalldesikon111和smalldesikon\n开源并公开的4000+\n没惹你就开源的自动给我30年寿命\n公益脚本禁止倒卖",
-    Image = "rbxassetid://107039115828792",
+    Image = "rbxassetid://84411268070942",
     ImageSize = 100,
 })
 Z:Button({Title="复制作者QQ", Callback=function() setclipboard("2047955671") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ：2047955671", Duration=2}) end})
