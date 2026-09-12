@@ -1507,16 +1507,16 @@ MusicTab:Button({
 
 local BeautifyTab = D:Tab({Title="美化", Icon="sparkles"})
 
-local beautifyLogicEnabled = false
-local beautifyOrbitEnabled = false
-local beautifyJumpEnabled = false
-
 BeautifyTab:Button({
     Title = "加载美化菜单",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/NailongHUB/refs/heads/main/%E7%BE%8E%E5%8C%96.lua"))()
     end
 })
+
+local beautifyLogicEnabled = false
+local beautifyOrbitEnabled = false
+local beautifyJumpEnabled = false
 
 BeautifyTab:Toggle({
     Title = "魂环特效",
