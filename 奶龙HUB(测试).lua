@@ -63,6 +63,69 @@ pcall(function()
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
+    -- 周围黄色圆圈装饰：只做启动动画装饰，不影响中心方形图片
+    local decorLayer = Instance.new("Frame")
+    decorLayer.Name = "GoldCircleDecorations"
+    decorLayer.AnchorPoint = Vector2.new(0.5,0.5)
+    decorLayer.Position = UDim2.fromScale(0.5,0.39)
+    decorLayer.Size = UDim2.fromOffset(330,330)
+    decorLayer.BackgroundTransparency = 1
+    decorLayer.BorderSizePixel = 0
+    decorLayer.Parent = bg
+
+    local function addDecorCircle(x,y,size,thickness,transparency)
+        local circle = Instance.new("Frame")
+        circle.AnchorPoint = Vector2.new(0.5,0.5)
+        circle.Position = UDim2.fromOffset(x,y)
+        circle.Size = UDim2.fromOffset(size,size)
+        circle.BackgroundTransparency = 1
+        circle.BorderSizePixel = 0
+        circle.Parent = decorLayer
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1,0)
+        corner.Parent = circle
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = thickness or 2
+        stroke.Color = Color3.fromRGB(255,195,0)
+        stroke.Transparency = transparency or 0.2
+        stroke.Parent = circle
+        return circle
+    end
+
+    addDecorCircle(28,70,18,2,0.15)
+    addDecorCircle(302,70,24,2,0.1)
+    addDecorCircle(8,165,12,2,0.25)
+    addDecorCircle(322,165,16,2,0.18)
+    addDecorCircle(42,278,22,2,0.12)
+    addDecorCircle(288,278,18,2,0.18)
+    addDecorCircle(78,24,12,2,0.3)
+    addDecorCircle(252,24,14,2,0.25)
+
+    -- 圆圈动态装饰：整体缓慢旋转，并轻微呼吸闪烁
+    task.spawn(function()
+        local rotation = 0
+        while decorLayer and decorLayer.Parent do
+            rotation = (rotation + 0.8) % 360
+            decorLayer.Rotation = rotation
+            task.wait(0.02)
+        end
+    end)
+
+    task.spawn(function()
+        local t = 0
+        while decorLayer and decorLayer.Parent do
+            t = t + 0.06
+            local pulse = (math.sin(t) + 1) / 2
+            for _,obj in ipairs(decorLayer:GetChildren()) do
+                local stroke = obj:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    stroke.Transparency = 0.08 + pulse * 0.32
+                end
+            end
+            task.wait(0.03)
+        end
+    end)
+
     -- 金色方形边框容器：不用 UIStroke，避免边框向外溢出
     local imageBorder = Instance.new("Frame")
     imageBorder.Name = "GoldSquareBorder"
