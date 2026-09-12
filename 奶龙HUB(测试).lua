@@ -704,7 +704,6 @@ local function getrainbowcolor()
 end
 
 local function getESPColor(player, normalColor, rainbowEnabled)
-    -- 队伍检测只作用于真实玩家，NPC/模型不会参与队伍检测
     if espconfig.teamcheck and player and player:IsA("Player") and player ~= LocalPlayer then
         if player.Team ~= LocalPlayer.Team then
             return espconfig.teamcolor
@@ -1209,11 +1208,33 @@ local function isValidTarget(player)
     local part = player.Character:FindFirstChild(AimbotSettings.TargetPart)
     if not part then return false end
     if AimbotSettings.WallCheck then
+        local origin = Camera.CFrame.Position
+        local dir = part.Position - origin
+        local dist = dir.Magnitude
+        if dist < 0.001 then return true end
+        dir = dir.Unit * dist
+
         local params = RaycastParams.new()
-        params.FilterDescendantsInstances = {LocalPlayer.Character, player.Character}
+        -- 只检测"会挡子弹"的物理对象，忽略角色（自己、目标、其他玩家）
+        local ignore = { LocalPlayer.Character, player.Character }
+        for _, plr in pairs(game.Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                ignore[#ignore + 1] = plr.Character
+            end
+        end
+        params.FilterDescendantsInstances = ignore
         params.FilterType = Enum.RaycastFilterType.Blacklist
-        local result = workspace:Raycast(Camera.CFrame.Position, (part.Position - Camera.CFrame.Position).Unit * 1000, params)
-        if result and result.Instance ~= part then return false end
+        params.IgnoreWater = true
+
+        local result = workspace:Raycast(origin, dir, params)
+        if result then
+            -- 命中了某个实例：若它属于目标角色（头/躯干等），视为可见；
+            -- 否则就是被墙体/地形挡住，排除该目标。
+            local hit = result.Instance
+            if hit and hit ~= part and not hit:IsDescendantOf(player.Character) then
+                return false
+            end
+        end
     end
     return true
 end
@@ -1255,8 +1276,8 @@ end)
 AimTab:Toggle({ Title = "开启自瞄", Value = false, Callback = function(s) AimbotSettings.Enabled = s end })
 AimTab:Toggle({ Title = "自瞄圆圈", Value = false, Callback = function(s) AimbotSettings.CircleEnabled = s end })
 AimTab:Dropdown({ Title = "瞄准部位", Values = { "Head", "HumanoidRootPart" }, Value = "Head", Callback = function(v) AimbotSettings.TargetPart = v end })
-AimTab:Toggle({ Title = "队伍验证(没做好)", Value = false, Callback = function(s) AimbotSettings.TeamCheck = s end })
-AimTab:Toggle({ Title = "墙体检测(没做好)", Value = false, Callback = function(s) AimbotSettings.WallCheck = s end })
+AimTab:Toggle({ Title = "队伍验证", Value = false, Callback = function(s) AimbotSettings.TeamCheck = s end })
+AimTab:Toggle({ Title = "墙体检测", Value = false, Callback = function(s) AimbotSettings.WallCheck = s end })
 AimTab:Slider({ Title = "圆圈大小", Value = { Min = 30, Max = 500, Default = 100 }, Callback = function(v) AimbotSettings.CircleRadius = v end })
 AimTab:Slider({ Title = "圆圈厚度", Value = { Min = 1, Max = 10, Default = 2 }, Callback = function(v) AimbotSettings.CircleThickness = v end })
 AimTab:Dropdown({ Title = "圆圈颜色", Values = { "红", "橙", "黄", "绿", "青", "蓝", "紫", "彩色" }, Value = "彩色", Callback = function(v) AimbotSettings.CircleColor = v end })
