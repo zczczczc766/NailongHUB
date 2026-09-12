@@ -596,6 +596,86 @@ E:Toggle({
     end
 })
 
+local respawnAtDeathEnabled = false
+local respawnDeathConnection = nil
+local respawnCharacterConnection = nil
+local respawnCFrame = nil
+
+local function bindRespawnCharacter(character)
+    if not respawnAtDeathEnabled or not character then return end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid") or character:WaitForChild("Humanoid", 5)
+    if not humanoid then return end
+
+    if respawnDeathConnection then
+        respawnDeathConnection:Disconnect()
+        respawnDeathConnection = nil
+    end
+
+    respawnDeathConnection = humanoid.Died:Connect(function()
+        if not respawnAtDeathEnabled then return end
+
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if root then
+            respawnCFrame = root.CFrame
+        end
+
+        task.spawn(function()
+            task.wait(0.15)
+            if respawnAtDeathEnabled then
+                pcall(function()
+                    game.Players.LocalPlayer:LoadCharacter()
+                end)
+            end
+        end)
+    end)
+
+    if respawnCFrame then
+        task.spawn(function()
+            local root = character:WaitForChild("HumanoidRootPart", 5)
+            if root and respawnAtDeathEnabled and respawnCFrame then
+                task.wait(0.05)
+                root.CFrame = respawnCFrame
+                respawnCFrame = nil
+            end
+        end)
+    end
+end
+
+E:Toggle({
+    Title = "原地复活",
+    Value = false,
+    Callback = function(v)
+        respawnAtDeathEnabled = v
+
+        if respawnDeathConnection then
+            respawnDeathConnection:Disconnect()
+            respawnDeathConnection = nil
+        end
+
+        if respawnCharacterConnection then
+            respawnCharacterConnection:Disconnect()
+            respawnCharacterConnection = nil
+        end
+
+        if v then
+            local player = game.Players.LocalPlayer
+            if player.Character then
+                bindRespawnCharacter(player.Character)
+            end
+
+            respawnCharacterConnection = player.CharacterAdded:Connect(function(character)
+                if respawnAtDeathEnabled then
+                    task.wait(0.05)
+                    bindRespawnCharacter(character)
+                end
+            end)
+        else
+            respawnCFrame = nil
+        end
+    end
+})
+
 E:Button({
     Title = "防甩飞",
     Callback = function()
@@ -954,7 +1034,7 @@ end
 local function addNPCESP(obj)
     if not npcEspEnabled or not isNPCModel(obj) or npcHighlights[obj] then return end
     local h = Instance.new("Highlight")
-    h.Name = "ink_HUB_NPC_ESP"
+    h.Name = "奶龙_HUB_NPC_ESP"
     h.Adornee = obj
     h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     h.FillTransparency = 0.75
@@ -1215,7 +1295,6 @@ local function isValidTarget(player)
         dir = dir.Unit * dist
 
         local params = RaycastParams.new()
-        -- 只检测"会挡子弹"的物理对象，忽略角色（自己、目标、其他玩家）
         local ignore = { LocalPlayer.Character, player.Character }
         for _, plr in pairs(game.Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
@@ -1228,8 +1307,6 @@ local function isValidTarget(player)
 
         local result = workspace:Raycast(origin, dir, params)
         if result then
-            -- 命中了某个实例：若它属于目标角色（头/躯干等），视为可见；
-            -- 否则就是被墙体/地形挡住，排除该目标。
             local hit = result.Instance
             if hit and hit ~= part and not hit:IsDescendantOf(player.Character) then
                 return false
@@ -1502,6 +1579,17 @@ MusicTab:Button({
         else
             A:SetCore("SendNotification",{Title="提示", Text="当前没有正在播放的音乐", Duration=2})
         end
+    end
+})
+
+local BeautifyTab = D:Tab({Title="美化", Icon="sparkles"})
+BeautifyTab:Button({
+    Title = "加载美化菜单",
+    Callback = function()
+        pcall(function()
+            local source = game:HttpGet("https://raw.githubusercontent.com/zczczczc766/NailongHUB/refs/heads/main/%E7%BE%8E%E5%8C%96.lua")
+            loadstring(source)()
+        end)
     end
 })
 
