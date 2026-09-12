@@ -33,7 +33,6 @@ local ok,err=xpcall(function()
 
 local A=game:GetService("StarterGui")
 
--- 启动动画：保持到整个脚本真正加载完成后再关闭
 local finishStartup
 local updateStartupProgress
 pcall(function()
