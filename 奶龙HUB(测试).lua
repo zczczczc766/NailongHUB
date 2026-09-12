@@ -63,20 +63,19 @@ pcall(function()
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
-    -- 周围黄色圆圈装饰：只做启动动画装饰，不影响中心方形图片
+    -- 周围黄色动态圆圈装饰：数量更多、尺寸更大，并从中心向外扩散
     local decorLayer = Instance.new("Frame")
     decorLayer.Name = "GoldCircleDecorations"
     decorLayer.AnchorPoint = Vector2.new(0.5,0.5)
     decorLayer.Position = UDim2.fromScale(0.5,0.39)
-    decorLayer.Size = UDim2.fromOffset(330,330)
+    decorLayer.Size = UDim2.fromOffset(520,520)
     decorLayer.BackgroundTransparency = 1
     decorLayer.BorderSizePixel = 0
     decorLayer.Parent = bg
 
-    local function addDecorCircle(x,y,size,thickness,transparency)
+    local function addDecorCircle(size,thickness)
         local circle = Instance.new("Frame")
         circle.AnchorPoint = Vector2.new(0.5,0.5)
-        circle.Position = UDim2.fromOffset(x,y)
         circle.Size = UDim2.fromOffset(size,size)
         circle.BackgroundTransparency = 1
         circle.BorderSizePixel = 0
@@ -87,44 +86,66 @@ pcall(function()
         local stroke = Instance.new("UIStroke")
         stroke.Thickness = thickness or 2
         stroke.Color = Color3.fromRGB(255,195,0)
-        stroke.Transparency = transparency or 0.2
+        stroke.Transparency = 0.12
         stroke.Parent = circle
         return circle
     end
 
-    addDecorCircle(28,70,18,2,0.15)
-    addDecorCircle(302,70,24,2,0.1)
-    addDecorCircle(8,165,12,2,0.25)
-    addDecorCircle(322,165,16,2,0.18)
-    addDecorCircle(42,278,22,2,0.12)
-    addDecorCircle(288,278,18,2,0.18)
-    addDecorCircle(78,24,12,2,0.3)
-    addDecorCircle(252,24,14,2,0.25)
+    local circles = {}
+    local circleCount = 18
+    for i=1,circleCount do
+        local circle = addDecorCircle(12 + (i % 4) * 5, 2)
+        circles[i] = {
+            object=circle,
+            baseSize=12 + (i % 4) * 5,
+            angle=(i-1)*(360/circleCount) + (i%2)*8,
+            radius=115 + (i%5)*18,
+            speed=18 + (i%4)*5,
+            phase=(i%6)*0.35
+        }
+    end
 
-    -- 圆圈动态装饰：整体缓慢旋转，并轻微呼吸闪烁
+    -- 从中心向外扩散：每个圆圈不断向外移动，到边缘后重新从中心出现
     task.spawn(function()
-        local rotation = 0
+        local t=0
         while decorLayer and decorLayer.Parent do
-            rotation = (rotation + 0.8) % 360
-            decorLayer.Rotation = rotation
-            task.wait(0.02)
-        end
-    end)
-
-    task.spawn(function()
-        local t = 0
-        while decorLayer and decorLayer.Parent do
-            t = t + 0.06
-            local pulse = (math.sin(t) + 1) / 2
-            for _,obj in ipairs(decorLayer:GetChildren()) do
-                local stroke = obj:FindFirstChildOfClass("UIStroke")
-                if stroke then
-                    stroke.Transparency = 0.08 + pulse * 0.32
+            t=t+0.035
+            for _,data in ipairs(circles) do
+                local obj=data.object
+                if obj and obj.Parent then
+                    local cycle=(t*data.speed/55 + data.phase)%1
+                    local radius=45 + cycle*215
+                    local angle=math.rad(data.angle + t*7)
+                    local x=260 + math.cos(angle)*radius
+                    local y=260 + math.sin(angle)*radius
+                    obj.Position=UDim2.fromOffset(x,y)
+                    local fade=0.05 + cycle*0.58
+                    local stroke=obj:FindFirstChildOfClass("UIStroke")
+                    if stroke then stroke.Transparency=math.clamp(fade,0.05,0.72) end
+                    local scale=0.75 + cycle*0.75
+                    obj.Size=UDim2.fromOffset(data.baseSize*scale,data.baseSize*scale)
                 end
             end
-            task.wait(0.03)
+            task.wait(0.035)
         end
     end)
+
+    -- 再加两层缓慢旋转的淡金色大圆环，增强外围动态感
+    for _,ringData in ipairs({{size=410,thickness=2,trans=0.72},{size=500,thickness=2,trans=0.82}}) do
+        local ring=Instance.new("Frame")
+        ring.AnchorPoint=Vector2.new(0.5,0.5)
+        ring.Position=UDim2.fromOffset(260,260)
+        ring.Size=UDim2.fromOffset(ringData.size,ringData.size)
+        ring.BackgroundTransparency=1
+        ring.BorderSizePixel=0
+        ring.Parent=decorLayer
+        Instance.new("UICorner",ring).CornerRadius=UDim.new(1,0)
+        local stroke=Instance.new("UIStroke")
+        stroke.Thickness=ringData.thickness
+        stroke.Color=Color3.fromRGB(255,190,0)
+        stroke.Transparency=ringData.trans
+        stroke.Parent=ring
+    end
 
     -- 金色方形边框容器：不用 UIStroke，避免边框向外溢出
     local imageBorder = Instance.new("Frame")
@@ -154,7 +175,7 @@ pcall(function()
     title.Position = UDim2.fromScale(0.5,0.57)
     title.Size = UDim2.fromOffset(700,68)
     title.BackgroundTransparency = 1
-    title.Text = "正在加载 奶龙_HUB"
+    title.Text = "奶龙_HUB"
     title.TextColor3 = Color3.fromRGB(255,220,100)
     title.TextTransparency = 1
     title.Font = Enum.Font.GothamBold
