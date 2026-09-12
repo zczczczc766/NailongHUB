@@ -103,7 +103,6 @@ pcall(function()
         }
     end
 
-    -- 从中心向外扩散：每个圆圈不断向外移动，到边缘后重新从中心出现
     task.spawn(function()
         local t=0
         while decorLayer and decorLayer.Parent do
@@ -144,7 +143,6 @@ pcall(function()
         stroke.Parent=ring
     end
 
-    -- 金色方形边框容器：不用 UIStroke，避免边框向外溢出
     local imageBorder = Instance.new("Frame")
     imageBorder.Name = "GoldSquareBorder"
     imageBorder.AnchorPoint = Vector2.new(0.5,0.5)
@@ -302,6 +300,9 @@ for _,url in ipairs(winduiUrls) do
         if type(code) ~= "string" or #code < 100 then
             error("UI库返回内容为空")
         end
+        code = code:gsub("Close Window", "确定要关闭我吗QAQ")
+        code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
+        code = code:gsub("Cancel", "取消")
         local loader = loadstring(code)
         if type(loader) ~= "function" then
             error("loadstring失败")
