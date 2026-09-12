@@ -676,7 +676,9 @@ local espconfig = {
     rainbowoutline = false,
     rainbowtracers = false,
     rainbowspeed = 5,
-    tracerposition = "Bottom"
+    tracerposition = "Bottom",
+    teamcheck = false,
+    teamcolor = Color3.fromRGB(255, 0, 0)
 }
 local rainbowhue = 0
 local lastupdate = 0
@@ -699,6 +701,16 @@ local function getrainbowcolor()
         lastupdate = currenttime
     end
     return Color3.fromHSV(rainbowhue, 1, 1)
+end
+
+local function getESPColor(player, normalColor, rainbowEnabled)
+    -- 队伍检测只作用于真实玩家，NPC/模型不会参与队伍检测
+    if espconfig.teamcheck and player and player:IsA("Player") and player ~= LocalPlayer then
+        if player.Team ~= LocalPlayer.Team then
+            return espconfig.teamcolor
+        end
+    end
+    return rainbowEnabled and getrainbowcolor() or normalColor
 end
 
 local function getPlayerWeapon(player)
@@ -737,8 +749,8 @@ local function applyhighlighttocharacter(player, character)
     local highlighter = Instance.new("Highlight")
     highlighter.FillTransparency = espconfig.outlinefilltransparency
     highlighter.OutlineTransparency = espconfig.outlinetransparency
-    highlighter.OutlineColor = espconfig.rainbowoutline and getrainbowcolor() or espconfig.outlinecolor
-    highlighter.FillColor = espconfig.rainbowoutline and getrainbowcolor() or espconfig.outlinefillcolor
+    highlighter.OutlineColor = getESPColor(player, espconfig.outlinecolor, espconfig.rainbowoutline)
+    highlighter.FillColor = getESPColor(player, espconfig.outlinefillcolor, espconfig.rainbowoutline)
     highlighter.Adornee = character
     highlighter.Parent = character
     activehighlights[userid] = highlighter
@@ -772,7 +784,8 @@ local function setupplayerhighlight(player)
             table.insert(playerconnections[userid], player:GetPropertyChangedSignal("TeamColor"):Connect(function()
                 local highlight = activehighlights[userid]
                 if highlight then
-                    highlight.OutlineColor = espconfig.rainbowoutline and getrainbowcolor() or (player.TeamColor and player.TeamColor.Color) or espconfig.outlinecolor
+                    highlight.OutlineColor = getESPColor(player, espconfig.outlinecolor, espconfig.rainbowoutline)
+                    highlight.FillColor = getESPColor(player, espconfig.outlinefillcolor, espconfig.rainbowoutline)
                 end
             end))
             table.insert(playerconnections[userid], humanoid.Died:Connect(function()
@@ -790,7 +803,7 @@ local function updateesp()
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local hrp = player.Character.HumanoidRootPart
             local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
-            local color = espconfig.rainbowesp and getrainbowcolor() or espconfig.espcolor
+            local color = getESPColor(player, espconfig.espcolor, espconfig.rainbowesp)
             esp.Name.Color = color
             esp.Name.Size = espconfig.espsize
             if onscreen then
@@ -807,10 +820,13 @@ local function updateesp()
         end
     end
     if outlineEnabled then
-        for _, h in pairs(activehighlights) do
+        for userid, h in pairs(activehighlights) do
             if h then
-                h.OutlineColor = espconfig.rainbowoutline and getrainbowcolor() or espconfig.outlinecolor
-                h.FillColor = espconfig.rainbowoutline and getrainbowcolor() or espconfig.outlinefillcolor
+                local targetPlayer = Players:GetPlayerByUserId(userid)
+                if targetPlayer then
+                    h.OutlineColor = getESPColor(targetPlayer, espconfig.outlinecolor, espconfig.rainbowoutline)
+                    h.FillColor = getESPColor(targetPlayer, espconfig.outlinefillcolor, espconfig.rainbowoutline)
+                end
             end
         end
     end
@@ -839,7 +855,7 @@ local function updatetracers()
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local root = player.Character.HumanoidRootPart
             local screenpos, onscreen = Camera:WorldToViewportPoint(root.Position)
-            local color = espconfig.rainbowtracers and getrainbowcolor() or espconfig.tracercolor
+            local color = getESPColor(player, espconfig.tracercolor, espconfig.rainbowtracers)
             if onscreen then
                 line.From = Vector2.new(Camera.ViewportSize.X / 2, fromY)
                 line.To = Vector2.new(screenpos.X, screenpos.Y)
@@ -1004,6 +1020,21 @@ espGroup:Toggle({
     Value = false,
     Callback = function(v)
         setNPCESP(v)
+    end
+})
+
+espGroup:Toggle({
+    Title = "队伍检测",
+    Value = false,
+    Callback = function(v)
+        espconfig.teamcheck = v
+    end
+})
+espGroup:Colorpicker({
+    Title = "敌对队伍颜色",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(v)
+        espconfig.teamcolor = v
     end
 })
 
