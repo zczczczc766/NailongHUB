@@ -1215,6 +1215,7 @@ local function isValidTarget(player)
         dir = dir.Unit * dist
 
         local params = RaycastParams.new()
+        -- 只检测"会挡子弹"的物理对象，忽略角色（自己、目标、其他玩家）
         local ignore = { LocalPlayer.Character, player.Character }
         for _, plr in pairs(game.Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
@@ -1227,6 +1228,8 @@ local function isValidTarget(player)
 
         local result = workspace:Raycast(origin, dir, params)
         if result then
+            -- 命中了某个实例：若它属于目标角色（头/躯干等），视为可见；
+            -- 否则就是被墙体/地形挡住，排除该目标。
             local hit = result.Instance
             if hit and hit ~= part and not hit:IsDescendantOf(player.Character) then
                 return false
@@ -1504,10 +1507,687 @@ MusicTab:Button({
 
 local BeautifyTab = D:Tab({Title="美化", Icon="sparkles"})
 
+local beautifyLogicEnabled = false
+local beautifyOrbitEnabled = false
+local beautifyJumpEnabled = false
+
 BeautifyTab:Button({
     Title = "加载美化菜单",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/NailongHUB/refs/heads/main/%E7%BE%8E%E5%8C%96.lua"))()
+    end
+})
+
+BeautifyTab:Toggle({
+    Title = "魂环特效",
+    Value = false,
+    Callback = function(state)
+        beautifyLogicEnabled = state
+        if state then
+            pcall(function()
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+if _G.__SoulRingCleanup then
+    pcall(_G.__SoulRingCleanup)
+    _G.__SoulRingCleanup = nil
+end
+
+local CFG = {
+    SEGMENTS  = 64,   
+    RAYS      = 36,   
+    RUNES     = 24,   
+    THICK     = 0.14, 
+    HEIGHT_UP = 0.5,  
+    BREATH    = 0.9,  
+}
+
+local RINGS = {
+    {Name="十年白",   Color=Color3.fromRGB(255,255,255), R=2.20, W=0.30, Spd= 0.60, Light=false},
+    {Name="百年黄",   Color=Color3.fromRGB(255,220,70),  R=2.85, W=0.28, Spd=-0.50, Light=false},
+    {Name="百年黄",   Color=Color3.fromRGB(255,190,45),  R=3.50, W=0.30, Spd= 0.66, Light=false},
+    {Name="千年紫",   Color=Color3.fromRGB(185,85,255),  R=4.15, W=0.32, Spd=-0.54, Light=true },
+    {Name="千年紫",   Color=Color3.fromRGB(150,55,245),  R=4.80, W=0.34, Spd= 0.50, Light=true },
+    {Name="万年黑",   Color=Color3.fromRGB(45,30,70),    R=5.45, W=0.36, Spd=-0.44, Light=false},
+    {Name="万年黑",   Color=Color3.fromRGB(40,26,62),    R=6.10, W=0.38, Spd= 0.46, Light=false},
+    {Name="万年黑",   Color=Color3.fromRGB(35,23,55),    R=6.75, W=0.40, Spd=-0.38, Light=false},
+    {Name="十万年红", Color=Color3.fromRGB(255,50,45),   R=7.40, W=0.46, Spd= 0.32, Light=true },
+}
+
+local RAY_COLOR    = Color3.fromRGB(255,235,190) 
+local RUNE_COLOR   = Color3.fromRGB(255,225,150) 
+local CORE_COLOR   = Color3.fromRGB(255,245,220) 
+local CENTER_COLOR = Color3.fromRGB(200,170,255) 
+
+local function flatCF(pos, vX)
+    local vY = Vector3.new(0, 1, 0)
+    local vZ = vX:Cross(vY)      
+    return CFrame.fromMatrix(pos, vX, vY, vZ)
+end
+
+local function newPart(size, cf, color, trans)
+    local p = Instance.new("Part")
+    p.Anchored       = true
+    p.CanCollide     = false
+    p.CastShadow     = false
+    p.Material       = Enum.Material.Neon
+    p.TopSurface     = Enum.SurfaceType.Smooth
+    p.BottomSurface  = Enum.SurfaceType.Smooth
+    p.Size           = size
+    p.CFrame         = cf
+    p.Color          = color
+    p.Transparency   = trans or 0.12
+    p:SetAttribute("BaseTrans", p.Transparency)
+    return p
+end
+
+local function newGroup(name, parent)
+    local m = Instance.new("Model")
+    m.Name = name
+    local hub = Instance.new("Part")
+    hub.Name         = "Hub"
+    hub.Size         = Vector3.new(0.1, 0.1, 0.1)
+    hub.Anchored     = true
+    hub.CanCollide   = false
+    hub.Transparency = 1
+    hub.CFrame       = CFrame.new(0, 0, 0)
+    hub.Parent       = m
+    m.PrimaryPart    = hub
+    m.Parent         = parent
+    return m
+end
+
+local function buildRing(cfg, index, parent)
+    local g = newGroup("Ring" .. index .. "_" .. cfg.Name, parent)
+    local segs = {}
+    local segLen = (2 * math.pi * cfg.R) / CFG.SEGMENTS * 1.10
+    for i = 0, CFG.SEGMENTS - 1 do
+        local a   = (i / CFG.SEGMENTS) * math.pi * 2
+        local pos = Vector3.new(math.cos(a) * cfg.R, 0, math.sin(a) * cfg.R)
+        local tan = Vector3.new(-math.sin(a), 0, math.cos(a)) 
+        local p = newPart(
+            Vector3.new(segLen, CFG.THICK, cfg.W),
+            flatCF(pos, tan),
+            cfg.Color, 0.12
+        )
+        p.Parent = g
+        table.insert(segs, p)
+    end
+    if cfg.Light then
+        local pl = Instance.new("PointLight")
+        pl.Color      = cfg.Color
+        pl.Brightness = 1.6
+        pl.Range      = 9
+        pl.Parent     = g.PrimaryPart
+    end
+    return g, segs
+end
+
+local function buildRays(parent, innerR, outerR)
+    local g = newGroup("Rays", parent)
+    local segs = {}
+    local len  = outerR - innerR
+    local midR = (innerR + outerR) / 2
+    for i = 0, CFG.RAYS - 1 do
+        local a   = (i / CFG.RAYS) * math.pi * 2
+        local pos = Vector3.new(math.cos(a) * midR, 0, math.sin(a) * midR)
+        local dir = Vector3.new(math.cos(a), 0, math.sin(a)) 
+        local p = newPart(
+            Vector3.new(len, CFG.THICK * 0.7, 0.07),
+            flatCF(pos, dir),
+            RAY_COLOR, 0.35
+        )
+        p.Parent = g
+        table.insert(segs, p)
+    end
+    return g, segs
+end
+
+local function buildRunes(parent, radius)
+    local g = newGroup("Runes", parent)
+    local segs = {}
+    for i = 0, CFG.RUNES - 1 do
+        local a   = (i / CFG.RUNES) * math.pi * 2
+        local pos = Vector3.new(math.cos(a) * radius, 0, math.sin(a) * radius)
+        local p = newPart(
+            Vector3.new(0.34, CFG.THICK * 0.8, 0.34),
+            CFrame.new(pos) * CFrame.Angles(0, math.rad(45), 0),
+            RUNE_COLOR, 0.25
+        )
+        p.Parent = g
+        table.insert(segs, p)
+    end
+    return g, segs
+end
+
+local function buildCenter(parent)
+    local g = newGroup("Center", parent)
+    local segs = {}
+
+    local hexR, sides = 1.5, 6
+    for i = 1, sides do
+        local a1  = ((i - 1) / sides) * math.pi * 2
+        local a2  = (i / sides) * math.pi * 2
+        local p1  = Vector3.new(math.cos(a1) * hexR, 0, math.sin(a1) * hexR)
+        local p2  = Vector3.new(math.cos(a2) * hexR, 0, math.sin(a2) * hexR)
+        local mid = (p1 + p2) / 2
+        local dir = (p2 - p1).Unit
+        local p = newPart(
+            Vector3.new((p2 - p1).Magnitude, CFG.THICK * 0.8, 0.08),
+            flatCF(mid, dir),
+            CENTER_COLOR, 0.30
+        )
+        p.Parent = g
+        table.insert(segs, p)
+    end
+
+    local innerR, n = 0.95, 32
+    local segLen = (2 * math.pi * innerR) / n * 1.10
+    for i = 0, n - 1 do
+        local a   = (i / n) * math.pi * 2
+        local pos = Vector3.new(math.cos(a) * innerR, 0, math.sin(a) * innerR)
+        local tan = Vector3.new(-math.sin(a), 0, math.cos(a))
+        local p = newPart(
+            Vector3.new(segLen, CFG.THICK * 0.7, 0.06),
+            flatCF(pos, tan),
+            CENTER_COLOR, 0.28
+        )
+        p.Parent = g
+        table.insert(segs, p)
+    end
+
+    local core = newPart(Vector3.new(0.5, 0.16, 0.5), CFrame.new(0, 0, 0), CORE_COLOR, 0.05)
+    core.Shape = Enum.PartType.Cylinder
+    core.Parent = g
+    table.insert(segs, core)
+
+    local pl = Instance.new("PointLight")
+    pl.Color      = CORE_COLOR
+    pl.Brightness = 2.2
+    pl.Range      = 7
+    pl.Parent     = g.PrimaryPart
+
+    return g, segs
+end
+
+local curModel, curGroups, hbConn = nil, nil, nil
+local breathT, breathAccum = 0, 0
+
+local function cleanup()
+    if hbConn then hbConn:Disconnect() hbConn = nil end
+    if curModel then curModel:Destroy() curModel = nil end
+    curGroups = nil
+end
+
+local function buildArray()
+    local model = Instance.new("Model")
+    model.Name  = "SoulRingArray"
+    local hub = Instance.new("Part")
+    hub.Name         = "Hub"
+    hub.Size         = Vector3.new(0.1, 0.1, 0.1)
+    hub.Anchored     = true
+    hub.CanCollide   = false
+    hub.Transparency = 1
+    hub.CFrame       = CFrame.new(0, 0, 0)
+    hub.Parent       = model
+    model.PrimaryPart = hub
+
+    local groups = {}
+    local outerR = RINGS[#RINGS].R
+
+    for i, cfg in ipairs(RINGS) do
+        local g, segs = buildRing(cfg, i, model)
+        table.insert(groups, {
+            Model = g, Segs = segs, Speed = cfg.Spd,
+            Angle = (i * 0.7) % (math.pi * 2),
+            Light = g.PrimaryPart:FindFirstChildOfClass("PointLight"),
+        })
+    end
+
+    local raysG, raysS = buildRays(model, 1.6, outerR - 0.3)
+    table.insert(groups, {Model = raysG, Segs = raysS, Speed = 0.12, Angle = 0, Light = nil})
+
+    local runeG, runeS = buildRunes(model, outerR + 0.55)
+    table.insert(groups, {Model = runeG, Segs = runeS, Speed = -0.18, Angle = 0, Light = nil})
+
+    local ctrG, ctrS = buildCenter(model)
+    table.insert(groups, {
+        Model = ctrG, Segs = ctrS, Speed = -0.25, Angle = 0,
+        Light = ctrG.PrimaryPart:FindFirstChildOfClass("PointLight"),
+    })
+
+    return model, groups
+end
+
+local function attach(char)
+    cleanup()
+
+    local hum  = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+    if not (hum and root) then return end
+
+    local model, groups = buildArray()
+    model.Parent = workspace
+    curModel     = model
+    curGroups    = groups
+    breathT      = 0
+    breathAccum  = 0
+
+    hum.Died:Connect(cleanup)
+
+    local function getFootCF()
+        local cf = root.CFrame
+        local hip = (hum.HipHeight and hum.HipHeight > 0) and hum.HipHeight or 2
+
+        return cf * CFrame.new(0, -(root.Size.Y / 2 + hip), 0)
+    end
+
+    hbConn = RunService.Heartbeat:Connect(function(dt)
+        if not (root and root.Parent and model and model.Parent) then return end
+
+        local footCF = getFootCF()
+
+        local baseCF = footCF * CFrame.new(0, CFG.HEIGHT_UP, 0)
+
+        for _, g in ipairs(groups) do
+            g.Angle = (g.Angle + g.Speed * dt) % (math.pi * 2)
+            g.Model:PivotTo(baseCF * CFrame.Angles(0, g.Angle, 0))
+        end
+
+        breathAccum = breathAccum + dt
+        if breathAccum >= 0.05 then
+            local step = breathAccum
+            breathAccum = 0
+            breathT = breathT + step * CFG.BREATH
+            local breath = 0.5 + 0.5 * math.sin(breathT) 
+
+            for _, g in ipairs(groups) do
+                for _, p in ipairs(g.Segs) do
+                    local base = p:GetAttribute("BaseTrans") or 0.12
+                    p.Transparency = math.clamp(base - 0.15 + 0.30 * (1 - breath), 0, 0.95)
+                end
+                if g.Light then
+                    g.Light.Brightness = 0.9 + 1.4 * breath
+                end
+            end
+        end
+    end)
+end
+
+_G.__SoulRingCleanup = cleanup
+
+if player.Character then
+    attach(player.Character)
+end
+player.CharacterAdded:Connect(attach)
+            end)
+        elseif _G.__SoulRingCleanup then
+            pcall(_G.__SoulRingCleanup)
+        end
+    end
+})
+
+BeautifyTab:Toggle({
+    Title = "手中物品分身旋转",
+    Value = false,
+    Callback = function(state)
+        beautifyOrbitEnabled = state
+        if state then
+            pcall(function()
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local clonedParts = {}
+local originalHandle = nil
+local originalTransparency = nil
+local renderConn = nil
+
+local NUM_ITEMS = 8
+local RADIUS = 5
+local HEIGHT_OFFSET = 0  
+local ROTATE_SPEED = 2
+
+local function cleanup()
+	if renderConn then
+		renderConn:Disconnect()
+		renderConn = nil
+	end
+	for _, part in ipairs(clonedParts) do
+		if part and part.Parent then
+			part:Destroy()
+		end
+	end
+	clonedParts = {}
+	if originalHandle and originalHandle.Parent then
+		originalHandle.Transparency = originalTransparency or 0
+	end
+	originalHandle = nil
+	originalTransparency = nil
+end
+
+local function addGlow(part)
+	local light = Instance.new("PointLight")
+	light.Brightness = 2
+	light.Range = 6
+	light.Color = part.Color
+	light.Parent = part
+end
+
+local function startFollow()
+	if renderConn then renderConn:Disconnect() end
+	local startTime = tick()
+	renderConn = RunService.RenderStepped:Connect(function()
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if not root then return end
+
+		local timePassed = tick() - startTime
+		local spinAngle = ROTATE_SPEED * timePassed
+
+		local forward = root.CFrame.LookVector
+		local right = root.CFrame.RightVector
+		local up = Vector3.new(0, 1, 0)
+
+		local center = root.Position + up * HEIGHT_OFFSET
+
+		for i, part in ipairs(clonedParts) do
+			if not part or not part.Parent then continue end
+
+			local angle = (i - 1) / NUM_ITEMS * math.pi * 2 + spinAngle
+
+			local x = math.cos(angle) * RADIUS
+			local z = math.sin(angle) * RADIUS
+
+			local worldOffset = right * x + forward * z
+			local position = center + worldOffset
+
+			local itemUp = up
+			local itemForward = (worldOffset).Unit  
+			local itemRight = itemUp:Cross(itemForward).Unit
+
+			part.CFrame = CFrame.fromMatrix(position, itemRight, itemUp, -itemForward)
+		end
+	end)
+end
+
+local function equipTool(tool)
+	if not tool then return end
+	local handle = tool:FindFirstChild("Handle") or tool:WaitForChild("Handle", 2)
+	if not handle then return end
+
+	cleanup()
+
+	originalHandle = handle
+	originalTransparency = handle.Transparency
+
+	handle.Transparency = 1
+	handle.CanCollide = false
+
+	for i = 1, NUM_ITEMS do
+		local clone = handle:Clone()
+		clone.Name = "RingClone_" .. i
+		clone.Transparency = 0
+		clone.CanCollide = false
+		clone.Anchored = true
+		clone.Parent = workspace
+
+		addGlow(clone)
+		table.insert(clonedParts, clone)
+	end
+
+	startFollow()
+end
+
+local function onChildAdded(c)
+	if c:IsA("Tool") then
+		equipTool(c)
+	end
+end
+
+local function onChildRemoved(c)
+	if c:IsA("Tool") then
+		cleanup()
+	end
+end
+
+character.ChildAdded:Connect(onChildAdded)
+character.ChildRemoved:Connect(onChildRemoved)
+
+player.CharacterAdded:Connect(function(char)
+	cleanup()
+	character = char
+	character.ChildAdded:Connect(onChildAdded)
+	character.ChildRemoved:Connect(onChildRemoved)
+
+	_G.__HandOrbitCleanup = cleanup
+
+for _, obj in ipairs(character:GetChildren()) do
+		if obj:IsA("Tool") then
+			equipTool(obj)
+			break
+		end
+	end
+end)
+
+for _, obj in ipairs(character:GetChildren()) do
+	if obj:IsA("Tool") then
+		equipTool(obj)
+		break
+	end
+end
+            end)
+        elseif _G.__HandOrbitCleanup then
+            pcall(_G.__HandOrbitCleanup)
+        end
+    end
+})
+
+BeautifyTab:Toggle({
+    Title = "跳跃特效",
+    Value = false,
+    Callback = function(state)
+        beautifyJumpEnabled = state
+        if state then
+            pcall(function()
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+local CONFIG = {
+    Segments = 120,
+    MaxRadius = 6,
+    TubeRadius = 0.6,
+    Overlap = 1.2,
+    GrowTime = 0.5,
+    HoldTime = 0.2,
+    FadeTime = 0.3,
+    Cooldown = 0.3,
+    Color = Color3.fromRGB(0, 180, 255),
+    LightBrightness = 2.5,
+    LightRange = 15,
+}
+
+local TUBE_HEIGHT = CONFIG.TubeRadius * 2 * CONFIG.Overlap
+local GROUND_OFFSET = CONFIG.TubeRadius / 2  
+local lastSpawn = 0
+local characterConnections = {}
+local activeHalos = {}  
+
+local function getGroundY(hrp, char)
+    local origin = hrp.Position + Vector3.new(0, 2, 0)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local filter = {char}
+    for _, m in ipairs(activeHalos) do
+        if m and m.Parent then
+            table.insert(filter, m)
+        end
+    end
+    params.FilterDescendantsInstances = filter
+
+    local hit = workspace:Raycast(origin, Vector3.new(0, -200, 0), params)
+    if hit then
+        return hit.Position.Y
+    end
+
+    local hum = char:FindFirstChild("Humanoid")
+    local hip = 2
+    if hum and hum.HipHeight and hum.HipHeight > 0 then
+        hip = hum.HipHeight
+    end
+    return hrp.Position.Y - hip - (hrp.Size.Y / 2)
+end
+
+local function spawnHalo(centerPos)
+    local model = Instance.new("Model")
+    model.Name = "JumpHalo"
+    model.Parent = workspace
+    table.insert(activeHalos, model)
+
+    local parts = {}
+    local SEGMENTS = CONFIG.Segments
+    local MAX_RADIUS = CONFIG.MaxRadius
+    local TUBE_RADIUS = CONFIG.TubeRadius
+    local up = Vector3.new(0, 1, 0)
+
+    for i = 1, SEGMENTS do
+        local angle = (i / SEGMENTS) * 2 * math.pi
+        local pos = centerPos + Vector3.new(
+            MAX_RADIUS * math.cos(angle),
+            0,
+            MAX_RADIUS * math.sin(angle)
+        )
+        local tangent = Vector3.new(-math.sin(angle), 0, math.cos(angle))
+        local vZ = up:Cross(tangent)
+
+        local finalCF = CFrame.fromMatrix(pos, up, tangent, vZ)
+
+        local part = Instance.new("Part")
+        part.Shape = Enum.PartType.Cylinder
+        part.Size = Vector3.new(0.1, 0.1, 0.1)
+        part.CFrame = CFrame.new(centerPos)
+        part.Anchored = true
+        part.CanCollide = false
+        part.CastShadow = false
+        part.Material = Enum.Material.Neon
+        part.Transparency = 0
+        part.Color = CONFIG.Color
+        part.Parent = model
+
+        local finalSize = Vector3.new(TUBE_RADIUS, TUBE_HEIGHT, TUBE_RADIUS)
+        table.insert(parts, { part = part, finalCF = finalCF, finalSize = finalSize })
+    end
+
+    local lightPart = Instance.new("Part")
+    lightPart.Size = Vector3.new(0.2, 0.2, 0.2)
+    lightPart.CFrame = CFrame.new(centerPos)
+    lightPart.Anchored = true
+    lightPart.CanCollide = false
+    lightPart.CastShadow = false
+    lightPart.Transparency = 1
+    lightPart.Parent = model
+
+    local light = Instance.new("PointLight")
+    light.Parent = lightPart
+    light.Brightness = 0
+    light.Range = CONFIG.LightRange
+    light.Color = CONFIG.Color
+
+    local growInfo = TweenInfo.new(CONFIG.GrowTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    for _, data in ipairs(parts) do
+        TweenService:Create(data.part, growInfo, {
+            CFrame = data.finalCF,
+            Size = data.finalSize
+        }):Play()
+    end
+    TweenService:Create(light, growInfo, {
+        Brightness = CONFIG.LightBrightness
+    }):Play()
+
+    task.wait(CONFIG.GrowTime + CONFIG.HoldTime)
+
+    local fadeInfo = TweenInfo.new(CONFIG.FadeTime, Enum.EasingStyle.Linear)
+    for _, data in ipairs(parts) do
+        TweenService:Create(data.part, fadeInfo, { Transparency = 1 }):Play()
+    end
+    TweenService:Create(light, fadeInfo, { Brightness = 0 }):Play()
+
+    task.wait(CONFIG.FadeTime + 0.1)
+
+    for i, m in ipairs(activeHalos) do
+        if m == model then
+            table.remove(activeHalos, i)
+            break
+        end
+    end
+    model:Destroy()
+end
+
+local function setupCharacter(char)
+    local humanoid = char:FindFirstChild("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not hrp then return end
+
+    if characterConnections[char] then
+        characterConnections[char]:Disconnect()
+        characterConnections[char] = nil
+    end
+
+    local conn = humanoid.StateChanged:Connect(function(oldState, newState)
+        if newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Freefall then
+            local now = tick()
+            if now - lastSpawn >= CONFIG.Cooldown then
+                lastSpawn = now
+
+                local groundY = getGroundY(hrp, char)
+                local pos = Vector3.new(hrp.Position.X, groundY + GROUND_OFFSET, hrp.Position.Z)
+                task.spawn(function() spawnHalo(pos) end)
+            end
+        end
+    end)
+
+    characterConnections[char] = conn
+end
+
+local function onCharacterAdded(char)
+    char:WaitForChild("Humanoid")
+    char:WaitForChild("HumanoidRootPart")
+    setupCharacter(char)
+
+    char.AncestryChanged:Connect(function()
+        if not char.Parent then
+            if characterConnections[char] then
+                characterConnections[char]:Disconnect()
+                characterConnections[char] = nil
+            end
+        end
+    end)
+end
+
+_G.__JumpEffectCleanup = function()
+    for char, conn in pairs(characterConnections) do
+        if conn then pcall(function() conn:Disconnect() end) end
+        characterConnections[char] = nil
+    end
+    for i = #activeHalos, 1, -1 do
+        local m = activeHalos[i]
+        if m and m.Parent then pcall(function() m:Destroy() end) end
+        table.remove(activeHalos, i)
+    end
+end
+
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+            end)
+        elseif _G.__JumpEffectCleanup then
+            pcall(_G.__JumpEffectCleanup)
+        end
     end
 })
 
