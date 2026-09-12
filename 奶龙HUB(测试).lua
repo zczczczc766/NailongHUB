@@ -597,42 +597,6 @@ E:Toggle({
 })
 
 E:Button({
-    Title = "原地复活",
-    Callback = function()
-        pcall(function()
-            local Players = game:GetService("Players")
-            local Player = Players.LocalPlayer
-            if not Player then return end
-            local char = Player.Character
-            if not char then
-                Player:LoadCharacter()
-                safeNotify("原地复活", "已重生", 2)
-                return
-            end
-            local root = char:FindFirstChild("HumanoidRootPart")
-            local savedCFrame = root and root.CFrame
-            Player:LoadCharacter()
-            if savedCFrame then
-                spawn(function()
-                    local newChar = Player.Character or Player.CharacterAdded:Wait()
-                    local newRoot = newChar:WaitForChild("HumanoidRootPart", 10)
-                    if newRoot then
-                        wait(0.5)
-                        newRoot.CFrame = savedCFrame + Vector3.new(0, 3, 0)
-                        if newChar.PrimaryPart then
-                            newChar:SetPrimaryPartCFrame(savedCFrame + Vector3.new(0, 3, 0))
-                        end
-                        local newHum = newChar:FindFirstChildOfClass("Humanoid")
-                        if newHum then newHum.Health = newHum.MaxHealth end
-                    end
-                end)
-            end
-            safeNotify("原地复活", "已重生并回到原位", 3)
-        end)
-    end
-})
-
-E:Button({
     Title = "防甩飞",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Linux6699/DaHubRevival/main/AntiFling.lua"))()
@@ -3169,62 +3133,6 @@ end)
 if finishStartup then
     task.spawn(finishStartup)
 end
-
--- ========== 原地复活 ==========
--- 死亡后重新生成角色，并传送回死亡前的位置（保持原有速度/状态清零）
-local function RespawnAtPosition()
-    local Players = game:GetService("Players")
-    local Player = Players.LocalPlayer
-    if not Player then return end
-
-    -- 记录死亡位置：优先保存的上一次根部位姿，否则用当前 HumanoidRootPart 位置
-    local savedCFrame
-    pcall(function()
-        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            savedCFrame = Player.Character.HumanoidRootPart.CFrame
-        end
-    end)
-    if not savedCFrame and getgenv().OldPos then
-        savedCFrame = getgenv().OldPos
-    end
-
-    -- 方式一：触发官方重生（最稳定，绕过部分 anti-cheat）
-    local ok = pcall(function()
-        Player:LoadCharacter()
-    end)
-    if not ok then
-        -- 方式二：通过死亡状态强制重生
-        pcall(function()
-            local hum = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid")
-            if hum then hum.Health = 0 end
-            task.wait(Players.RespawnTime + 0.1)
-        end)
-    end
-
-    -- 等新角色生成后传回原地
-    task.spawn(function()
-        local char = Player.Character or Player.CharacterAdded:Wait()
-        local hum = char:WaitForChild("Humanoid", 10)
-        local root = char:WaitForChild("HumanoidRootPart", 10)
-        if not root then return end
-
-        -- 等角色落地/初始化完成再传送，避免被重置
-        task.wait(0.5)
-
-        if savedCFrame then
-            root.CFrame = savedCFrame + Vector3.new(0, 3, 0)  -- 略微抬高防卡地
-            char:SetPrimaryPartCFrame(savedCFrame + Vector3.new(0, 3, 0))
-        end
-
-        -- 恢复满状态
-        pcall(function()
-            hum.Health = hum.MaxHealth
-        end)
-
-        safeNotify("原地复活", "已回到原位", 3)
-    end)
-end
-getgenv().RespawnAtPosition = RespawnAtPosition
 
 end,function(e)
     if finishStartup then pcall(finishStartup) end
