@@ -75,80 +75,244 @@ pcall(function()
     B:SetTheme("奶龙_Gold")
 end)
 
--- 奶龙┃被遗弃 启动动画：显示脚本名，完成后自动消失
+-- 启动动画：完全采用奶龙_HUB同款结构，只有脚本名改为“被遗弃”
 do
     local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
     local CoreGui = game:GetService("CoreGui")
+    local playerGui = Players.LocalPlayer and Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+
+    local oldGui = CoreGui:FindFirstChild("NailongHubStartup")
+    if oldGui then oldGui:Destroy() end
+    if playerGui then
+        local oldPlayerGui = playerGui:FindFirstChild("NailongHubStartup")
+        if oldPlayerGui then oldPlayerGui:Destroy() end
+    end
+
     local gui = Instance.new("ScreenGui")
-    gui.Name = "Nailong_Forsaken_Loading"
+    gui.Name = "NailongHubStartup"
     gui.IgnoreGuiInset = true
     gui.ResetOnSpawn = false
     gui.DisplayOrder = 999999
-    gui.Parent = CoreGui
+    gui.Parent = playerGui or CoreGui
 
     local bg = Instance.new("Frame")
-    bg.Size = UDim2.fromScale(1, 1)
-    bg.BackgroundColor3 = Color3.fromRGB(18, 14, 5)
-    bg.BackgroundTransparency = 0.08
+    bg.Size = UDim2.fromScale(1,1)
+    bg.BackgroundColor3 = Color3.fromRGB(8,7,3)
+    bg.BackgroundTransparency = 0.12
     bg.BorderSizePixel = 0
     bg.Parent = gui
 
-    local holder = Instance.new("Frame")
-    holder.AnchorPoint = Vector2.new(0.5, 0.5)
-    holder.Position = UDim2.fromScale(0.5, 0.5)
-    holder.Size = UDim2.fromOffset(360, 180)
-    holder.BackgroundTransparency = 1
-    holder.Parent = bg
+    local decorLayer = Instance.new("Frame")
+    decorLayer.Name = "GoldCircleDecorations"
+    decorLayer.AnchorPoint = Vector2.new(0.5,0.5)
+    decorLayer.Position = UDim2.fromScale(0.5,0.39)
+    decorLayer.Size = UDim2.fromOffset(520,520)
+    decorLayer.BackgroundTransparency = 1
+    decorLayer.BorderSizePixel = 0
+    decorLayer.Parent = bg
 
-    local logo = Instance.new("ImageLabel")
-    logo.AnchorPoint = Vector2.new(0.5, 0)
-    logo.Position = UDim2.fromScale(0.5, 0)
-    logo.Size = UDim2.fromOffset(82, 82)
-    logo.BackgroundTransparency = 1
-    logo.Image = "rbxassetid://84411268070942"
-    logo.Parent = holder
+    local function addDecorCircle(size,thickness)
+        local circle = Instance.new("Frame")
+        circle.AnchorPoint = Vector2.new(0.5,0.5)
+        circle.Size = UDim2.fromOffset(size,size)
+        circle.BackgroundTransparency = 1
+        circle.BorderSizePixel = 0
+        circle.Parent = decorLayer
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1,0)
+        corner.Parent = circle
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = thickness or 2
+        stroke.Color = Color3.fromRGB(255,195,0)
+        stroke.Transparency = 0.12
+        stroke.Parent = circle
+        return circle
+    end
 
-    local title = Instance.new("TextLabel")
-    title.AnchorPoint = Vector2.new(0.5, 0)
-    title.Position = UDim2.new(0.5, 0, 0, 92)
-    title.Size = UDim2.fromOffset(350, 38)
-    title.BackgroundTransparency = 1
-    title.Text = "奶龙┃被遗弃"
-    title.TextColor3 = Color3.fromRGB(255, 210, 70)
-    title.TextSize = 26
-    title.Font = Enum.Font.GothamBold
-    title.Parent = holder
-
-    local status = Instance.new("TextLabel")
-    status.AnchorPoint = Vector2.new(0.5, 0)
-    status.Position = UDim2.new(0.5, 0, 0, 130)
-    status.Size = UDim2.fromOffset(350, 24)
-    status.BackgroundTransparency = 1
-    status.Text = "正在加载..."
-    status.TextColor3 = Color3.fromRGB(255, 235, 150)
-    status.TextSize = 14
-    status.Font = Enum.Font.Gotham
-    status.Parent = holder
+    local circles = {}
+    local circleCount = 18
+    for i=1,circleCount do
+        local circle = addDecorCircle(12 + (i % 4) * 5, 2)
+        circles[i] = {
+            object=circle,
+            baseSize=12 + (i % 4) * 5,
+            angle=(i-1)*(360/circleCount) + (i%2)*8,
+            radius=115 + (i%5)*18,
+            speed=18 + (i%4)*5,
+            phase=(i%6)*0.35
+        }
+    end
 
     task.spawn(function()
-        for i = 1, 24 do
-            if not gui.Parent then return end
-            local dots = string.rep(".", (i - 1) % 4)
-            status.Text = "正在加载" .. dots
-            logo.Rotation = (logo.Rotation + 15) % 360
-            task.wait(0.05)
+        local t=0
+        while decorLayer and decorLayer.Parent do
+            t=t+0.035
+            for _,data in ipairs(circles) do
+                local obj=data.object
+                if obj and obj.Parent then
+                    local cycle=(t*data.speed/55 + data.phase)%1
+                    local radius=45 + cycle*215
+                    local angle=math.rad(data.angle + t*7)
+                    local x=260 + math.cos(angle)*radius
+                    local y=260 + math.sin(angle)*radius
+                    obj.Position=UDim2.fromOffset(x,y)
+                    local fade=0.05 + cycle*0.58
+                    local stroke=obj:FindFirstChildOfClass("UIStroke")
+                    if stroke then stroke.Transparency=math.clamp(fade,0.05,0.72) end
+                    local scale=0.75 + cycle*0.75
+                    obj.Size=UDim2.fromOffset(data.baseSize*scale,data.baseSize*scale)
+                end
+            end
+            task.wait(0.035)
         end
     end)
 
-    task.delay(1.35, function()
+    for _,ringData in ipairs({{size=410,thickness=2,trans=0.72},{size=500,thickness=2,trans=0.82}}) do
+        local ring=Instance.new("Frame")
+        ring.AnchorPoint=Vector2.new(0.5,0.5)
+        ring.Position=UDim2.fromOffset(260,260)
+        ring.Size=UDim2.fromOffset(ringData.size,ringData.size)
+        ring.BackgroundTransparency=1
+        ring.BorderSizePixel=0
+        ring.Parent=decorLayer
+        Instance.new("UICorner",ring).CornerRadius=UDim.new(1,0)
+        local stroke=Instance.new("UIStroke")
+        stroke.Thickness=ringData.thickness
+        stroke.Color=Color3.fromRGB(255,190,0)
+        stroke.Transparency=ringData.trans
+        stroke.Parent=ring
+    end
+
+    local imageBorder = Instance.new("Frame")
+    imageBorder.Name = "GoldSquareBorder"
+    imageBorder.AnchorPoint = Vector2.new(0.5,0.5)
+    imageBorder.Position = UDim2.fromScale(0.5,0.39)
+    imageBorder.Size = UDim2.fromOffset(232,232)
+    imageBorder.BackgroundColor3 = Color3.fromRGB(255,195,0)
+    imageBorder.BorderSizePixel = 0
+    imageBorder.Parent = bg
+
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "CenterIcon"
+    icon.AnchorPoint = Vector2.new(0.5,0.5)
+    icon.Position = UDim2.fromScale(0.5,0.5)
+    icon.Size = UDim2.fromOffset(224,224)
+    icon.BackgroundColor3 = Color3.fromRGB(8,7,3)
+    icon.BackgroundTransparency = 0
+    icon.BorderSizePixel = 0
+    icon.Image = "rbxassetid://118156660240152"
+    icon.ImageTransparency = 1
+    icon.ScaleType = Enum.ScaleType.Fit
+    icon.Parent = imageBorder
+
+    local title = Instance.new("TextLabel")
+    title.AnchorPoint = Vector2.new(0.5,0)
+    title.Position = UDim2.fromScale(0.5,0.57)
+    title.Size = UDim2.fromOffset(700,68)
+    title.BackgroundTransparency = 1
+    title.Text = "正在加载 奶龙┃被遗弃"
+    title.TextColor3 = Color3.fromRGB(255,220,100)
+    title.TextTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 42
+    title.Parent = bg
+
+    local sub = Instance.new("TextLabel")
+    sub.AnchorPoint = Vector2.new(0.5,0)
+    sub.Position = UDim2.fromScale(0.5,0.65)
+    sub.Size = UDim2.fromOffset(700,42)
+    sub.BackgroundTransparency = 1
+    sub.Text = "正在初始化..."
+    sub.TextColor3 = Color3.fromRGB(235,220,175)
+    sub.TextTransparency = 1
+    sub.Font = Enum.Font.Gotham
+    sub.TextSize = 20
+    sub.Parent = bg
+
+    local barBack = Instance.new("Frame")
+    barBack.AnchorPoint = Vector2.new(0.5,0)
+    barBack.Position = UDim2.fromScale(0.5,0.74)
+    barBack.Size = UDim2.fromOffset(440,9)
+    barBack.BackgroundColor3 = Color3.fromRGB(65,52,20)
+    barBack.BackgroundTransparency = 1
+    barBack.BorderSizePixel = 0
+    barBack.Parent = bg
+    Instance.new("UICorner",barBack).CornerRadius = UDim.new(1,0)
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.fromScale(0.05,1)
+    bar.BackgroundColor3 = Color3.fromRGB(255,195,0)
+    bar.BackgroundTransparency = 1
+    bar.BorderSizePixel = 0
+    bar.Parent = barBack
+    Instance.new("UICorner",bar).CornerRadius = UDim.new(1,0)
+
+    local percent = Instance.new("TextLabel")
+    percent.AnchorPoint = Vector2.new(0.5,0)
+    percent.Position = UDim2.fromScale(0.5,0.775)
+    percent.Size = UDim2.fromOffset(200,34)
+    percent.BackgroundTransparency = 1
+    percent.Text = "5%"
+    percent.TextColor3 = Color3.fromRGB(255,210,70)
+    percent.TextTransparency = 1
+    percent.Font = Enum.Font.GothamBold
+    percent.TextSize = 16
+    percent.Parent = bg
+
+    local function tw(obj,time,props)
+        return TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props)
+    end
+
+    tw(icon,0.45,{ImageTransparency=0}):Play()
+    tw(title,0.45,{TextTransparency=0}):Play()
+    tw(sub,0.45,{TextTransparency=0}):Play()
+    tw(barBack,0.35,{BackgroundTransparency=0}):Play()
+    tw(bar,0.5,{Size=UDim2.fromScale(0.05,1),BackgroundTransparency=0}):Play()
+    tw(percent,0.35,{TextTransparency=0}):Play()
+
+    task.spawn(function()
+        local steps={
+            {10,"正在初始化..."},
+            {35,"正在加载资源..."},
+            {60,"正在加载界面..."},
+            {82,"正在创建界面..."},
+            {100,"加载完成"}
+        }
+        for _,step in ipairs(steps) do
+            if not gui.Parent then return end
+            percent.Text=tostring(step[1]).."%"
+            sub.Text=step[2]
+            bar.Size=UDim2.fromScale(step[1]/100,1)
+            task.wait(0.28)
+        end
+        task.wait(0.35)
+        tw(bg,0.45,{BackgroundTransparency=1}):Play()
+        tw(icon,0.35,{ImageTransparency=1}):Play()
+        tw(title,0.35,{TextTransparency=1}):Play()
+        tw(sub,0.35,{TextTransparency=1}):Play()
+        tw(barBack,0.3,{BackgroundTransparency=1}):Play()
+        tw(percent,0.3,{TextTransparency=1}):Play()
+        task.wait(0.5)
         if gui and gui.Parent then gui:Destroy() end
+    end)
+
+    pcall(function()
+        local startupSound = Instance.new("Sound")
+        startupSound.Name = "奶龙_HUB_StartupSound"
+        startupSound.SoundId = "rbxassetid://84267705669861"
+        startupSound.Volume = 5
+        startupSound.Looped = false
+        startupSound.Parent = game:GetService("SoundService")
+        startupSound:Play()
+        startupSound.Ended:Connect(function() startupSound:Destroy() end)
     end)
 end
 
 local C = B:CreateWindow({
     Icon = "crown",
-    Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
-    Author = gradient("欢迎您体验", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
+    Title = "奶龙┃被遗弃",
+    Author = "欢迎您体验",
     Folder = "被遗弃",
     Size = UDim2.fromOffset(520, 410),
     Background = "rbxassetid://118156660240152",
@@ -162,7 +326,7 @@ local C = B:CreateWindow({
 
 pcall(function()
     C:EditOpenButton({
-        Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
+        Title = "奶龙┃被遗弃",
         Icon = "crown",
         StrokeThickness = 2,
         Color = ColorSequence.new({
@@ -382,7 +546,7 @@ function Window:Tab(name, icon)
     end
     local iconMap = {
         ["更新内容"] = "bell",
-        ["公告"] = "rbxassetid://84411268070942",
+        ["公告"] = "bell",
         ["脚本名单"] = "users",
         ["服务器"] = "server",
         ["通用区"] = "settings",
@@ -452,7 +616,7 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("公告", "rbxassetid://84411268070942")
+local FengYu = Window:Tab("公告", "bell")
 local Feng = FengYu:Section({
     Name = "奶龙_HUB公告",
     Logo = "rbxassetid://84411268070942",
