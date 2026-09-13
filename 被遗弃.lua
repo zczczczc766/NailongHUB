@@ -11,8 +11,8 @@ local Window = library:CreateWindow({
     Name = "奶龙┃被遗弃",
     SubName = "欢迎您体验",
     Keybind = Enum.KeyCode.RightShift,
-    Logo = 93541172717831,
-    Scene = 107675149559858,
+    Logo = 84411268070942,
+    Scene = 84411268070942,
     Theme = "Dark"
 })
 
@@ -24,16 +24,16 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("更新内容", "84830962019412")
+local FengYu = Window:Tab("更新内容", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "殺脚本信息内容",
-    Logo = "84830962019412",
+    Logo = "84411268070942",
     open = true
 })
 
 Feng:Video({
-    Video = "rbxassetid://5608337069",
+    Video = "rbxassetid://84411268070942",
     Name = "视频",
     AutoPlay = true,
     Looped = true,
@@ -47,11 +47,11 @@ Feng:Paragraph({
     Content = "●- 重写两次背刺和反背刺\n●-杀手区新添加综合功能(杀死所有)和(斩首者约翰.多的格挡)"
 })
 
-local FengYu = Window:Tab("脚本名单", "84830962019412")
+local FengYu = Window:Tab("脚本名单", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "人员卡片",
-    Logo = "84830962019412",
+    Logo = "84411268070942",
     open = true
 })
 
