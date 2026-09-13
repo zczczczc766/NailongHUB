@@ -216,7 +216,7 @@ do
     title.Position = UDim2.fromScale(0.5,0.57)
     title.Size = UDim2.fromOffset(700,68)
     title.BackgroundTransparency = 1
-    title.Text = "正在加载 奶龙┃被遗弃"
+    title.Text = "正在加载 奶龙_被遗弃"
     title.TextColor3 = Color3.fromRGB(255,220,100)
     title.TextTransparency = 1
     title.Font = Enum.Font.GothamBold
@@ -316,7 +316,7 @@ end
 
 local C = B:CreateWindow({
     Icon = "crown",
-    Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
+    Title = gradient("奶龙_被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
     Author = gradient("@墨水依旧 司空", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
     Folder = "被遗弃",
     Size = UDim2.fromOffset(520, 410),
@@ -329,7 +329,7 @@ local C = B:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-C:EditOpenButton({Title=gradient("奶龙┃被遗弃",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
+C:EditOpenButton({Title=gradient("奶龙_被遗弃",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
 local windowFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
