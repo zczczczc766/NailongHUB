@@ -276,7 +276,7 @@ do
     tw(bar,0.5,{Size=UDim2.fromScale(0.05,1),BackgroundTransparency=0}):Play()
     tw(percent,0.35,{TextTransparency=0}):Play()
 
-    task.spawn(function()
+    do
         local steps={
             {10,"正在初始化..."},
             {35,"正在加载资源..."},
@@ -300,7 +300,7 @@ do
         tw(percent,0.3,{TextTransparency=1}):Play()
         task.wait(0.5)
         if gui and gui.Parent then gui:Destroy() end
-    end)
+    end
 
     pcall(function()
         local startupSound = Instance.new("Sound")
@@ -317,7 +317,6 @@ end
 local C = B:CreateWindow({
     Icon = "crown",
     Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
-    Author = gradient("欢迎您体验", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
     Folder = "被遗弃",
     Size = UDim2.fromOffset(520, 410),
     Background = "rbxassetid://118156660240152",
@@ -345,6 +344,31 @@ end)
 
 local windowFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
+    -- 强制显示顶部标题，避免 WindUI 对 RichText/渐变 Title 的兼容问题。
+    pcall(function()
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Name = "NailongTitle"
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Position = UDim2.new(0, 58, 0, 6)
+        titleLabel.Size = UDim2.new(0, 260, 0, 32)
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.Text = "奶龙┃被遗弃"
+        titleLabel.TextSize = 18
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+        titleLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
+        titleLabel.ZIndex = 100
+        titleLabel.Parent = windowFrame
+
+        local titleGradient = Instance.new("UIGradient")
+        titleGradient.Name = "TitleGoldGradient"
+        titleGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255,235,120)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,190,0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
+        })
+        titleGradient.Parent = titleLabel
+    end)
     pcall(function()
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 16)
@@ -622,11 +646,7 @@ Window:Category({
 })
 
 local FengYu = Window:Tab("公告", "bell")
-local Feng = FengYu:Section({
-    Name = "奶龙_HUB公告",
-    Logo = "rbxassetid://84411268070942",
-    open = true
-})
+local Feng = FengYu
 
 Feng:Paragraph({
     Name = "欢迎使用 奶龙_HUB",
