@@ -18,6 +18,11 @@ for _, url in ipairs(winduiUrls) do
         if type(code) ~= "string" or #code < 100 then
             error("UI库返回内容为空")
         end
+        -- 关闭确认框中文化：沿用奶龙_HUB的文字
+        code = code:gsub("Close Window", "确定要关闭我吗QAQ")
+        code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
+        code = code:gsub("Cancel", "取消")
+        code = code:gsub("Confirm", "确认")
         local loader = loadstring(code)
         if type(loader) ~= "function" then
             error("loadstring失败")
@@ -311,8 +316,8 @@ end
 
 local C = B:CreateWindow({
     Icon = "crown",
-    Title = "奶龙┃被遗弃",
-    Author = "欢迎您体验",
+    Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
+    Author = gradient("欢迎您体验", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
     Folder = "被遗弃",
     Size = UDim2.fromOffset(520, 410),
     Background = "rbxassetid://118156660240152",
@@ -326,7 +331,7 @@ local C = B:CreateWindow({
 
 pcall(function()
     C:EditOpenButton({
-        Title = "奶龙┃被遗弃",
+        Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
         Icon = "crown",
         StrokeThickness = 2,
         Color = ColorSequence.new({
