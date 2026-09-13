@@ -11,8 +11,8 @@ local Window = library:CreateWindow({
     Name = "奶龙┃被遗弃",
     SubName = "欢迎您体验",
     Keybind = Enum.KeyCode.RightShift,
-    Logo = 84411268070942,
-    Scene = 84411268070942,
+    Logo = 118156660240152,
+    Scene = 118156660240152,
     Theme = "Dark"
 })
 
@@ -24,16 +24,16 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("更新内容", "84411268070942")
+local FengYu = Window:Tab("更新内容", "118156660240152")
 
 local Feng = FengYu:Section({
     Name = "殺脚本信息内容",
-    Logo = "84411268070942",
+    Logo = "118156660240152",
     open = true
 })
 
 Feng:Video({
-    Video = "rbxassetid://84411268070942",
+    Video = "rbxassetid://5608337069",
     Name = "视频",
     AutoPlay = true,
     Looped = true,
@@ -47,7 +47,7 @@ Feng:Paragraph({
     Content = "●- 重写两次背刺和反背刺\n●-杀手区新添加综合功能(杀死所有)和(斩首者约翰.多的格挡)"
 })
 
-local FengYu = Window:Tab("脚本名单", "84411268070942")
+local FengYu = Window:Tab("脚本名单", "118156660240152")
 
 local Feng = FengYu:Section({
     Name = "人员卡片",
@@ -59,9 +59,9 @@ Feng:Social({
     Name = "奶龙_HUB",
     SubName = "墨水依旧",
     SmlName = "你想知道的信息都在这个QQ群里",
-    copy = "958022428",
+    copy = "1101093219",
     Cbn = "复制QQ群",
-    Logo = "rbxassetid://84830962019412"
+    Logo = "rbxassetid://118156660240152"
 })
 
 Feng:Divider()
@@ -69,26 +69,26 @@ Feng:Divider()
 Feng:Social({
     Name = "奶龙_HUB创始人",
     SubName = "墨水依旧",
-    SmlName = "你好，你很好吗",
-    Logo = "rbxassetid://10418960920"
+    SmlName = "你好呀！",
+    Logo = "rbxassetid://118156660240152"
 })
 
 Feng:Social({
     Name = "奶龙_HUB现作者",
     SubName = "墨水依旧",
-    SmlName = "yoU Too sLoW WANT To TRy AGAIN?",
-    copy = "1926190957*",
+    SmlName = "我是奶龙！",
+    copy = "2047955671*",
     Cbn = "复制QQ号",
-    Logo = "rbxassetid://114277328620293"
+    Logo = "rbxassetid://118156660240152"
 })
 
 Feng:Social({
-    Name = "落叶脚本中心作者",
-    SubName = "kr X",
-    SmlName = "这是干什么的",
-    copy = "1826649340",
+    Name = "ink",
+    SubName = "黑客，停止攻击",
+    SmlName = "否则我会上报",
+    copy = "无",
     Cbn = "复制QQ号",
-    Logo = "rbxassetid://89985745713907"
+    Logo = "rbxassetid://82504261335674"
 })
 
 Window:Category({
@@ -97,12 +97,12 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("服务器", "132419977785712")
+local FengYu = Window:Tab("服务器", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "服务器列表",
     SubName = "选择你需要的服务器",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -367,12 +367,12 @@ Feng:Button({
     end
 })
 
-local FengYu = Window:Tab("通用区", "73542239032835")
+local FengYu = Window:Tab("通用区", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "主要列表",
     SubName = "本地修改阶段",
-    Logo = "73542239032835",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -764,7 +764,7 @@ Feng:Button({
 local Feng = FengYu:Section({
     Name = "场景设置",
     SubName = "地图上的视觉效果",
-    Logo = "100851815815313",
+    Logo = "84411268070942",
     open = true
 })
 
@@ -881,12 +881,12 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("体力区", "130874893373683")
+local FengYu = Window:Tab("体力区", "117210514734739")
 
 local Feng = FengYu:Section({
     Name = "体力管理",
-    SubName = "兄弟原来你也和我一样是索尼克",
-    Logo = "84830962019412",
+    SubName = "注意演戏啊！",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -1069,12 +1069,12 @@ Feng:Slider({
 })
 end
 
-local FengYu = Window:Tab("透视区", "126418616428157")
+local FengYu = Window:Tab("透视区", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "ESP透视",
     SubName = "高亮模式",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -1482,12 +1482,12 @@ Feng:Toggle({
 })
 end
 
-local FengYu = Window:Tab("物品区", "140005402255916")
+local FengYu = Window:Tab("物品区", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "物品互动",
-    SubName = "瞬移这一块",
-    Logo = "84830962019412",
+    SubName = "兄弟。",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -1673,12 +1673,12 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("发电机", "105433515091179")
+local FengYu = Window:Tab("发电机", "117210514734739")
 
 local Feng = FengYu:Section({
     Name = "发电机系统",
-    SubName = "里程碑的开始",
-    Logo = "105433515091179",
+    SubName = "方便多了",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -1985,7 +1985,7 @@ Feng:Button({
 })
 end
 
-local FengYu = Window:Tab("幸存者功能包", "6452688833")
+local FengYu = Window:Tab("幸存者功能包", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "机会",
@@ -2875,12 +2875,12 @@ do
     end)
 end
 
-local FengYu = Window:Tab("综合功能", "84830962019412")
+local FengYu = Window:Tab("综合功能", "118156660240152")
 
 local Feng = FengYu:Section({
     Name = "其他功能",
     SubName = "不一样的体验设置",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true,
 })
 
@@ -3319,7 +3319,7 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("杀手功能包", "10953967587")
+local FengYu = Window:Tab("杀手功能包", "117210514734739")
 
 local Feng = FengYu:Section({
     Name = "碰撞箱扩展",
@@ -4043,12 +4043,12 @@ Feng:Slider({
 })
 end
 
-local FengYu = Window:Tab("综合功能", "84830962019412")
+local FengYu = Window:Tab("综合功能", "118156660240152")
 
 local Feng = FengYu:Section({
     Name = "杀死全部人",
-    SubName = "就像疯子一样",
-    Logo = "84830962019412",
+    SubName = "黑客停止攻击！",
+    Logo = "118156660240152",
     open = true,
 })
 
@@ -4954,12 +4954,12 @@ Window:Category({
     Opened = false, 
 })
 
-local FengYu = Window:Tab("娱乐区", "108446823535062")
+local FengYu = Window:Tab("娱乐区", "84411268070942")
 
 local Feng = FengYu:Section({
     Name = "功夫熊猫🍋",
     SubName = "兄弟停止黑客！",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -5259,7 +5259,7 @@ Feng:Button({
 local Feng = FengYu:Section({
     Name = "权限设置",
     SubName = "未知的权限？",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -5348,7 +5348,7 @@ Feng:Button({
 local Feng = FengYu:Section({
     Name = "修改系统",
     SubName = "视觉上获得VIP",
-    Logo = "84830962019412",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -5392,12 +5392,12 @@ Window:Category({
     Opened = false, 
 })
 
-local FengYu = Window:Tab("配置管理", "137908403526430")
+local FengYu = Window:Tab("配置管理", "117210514734739")
 
 local Feng = FengYu:Section({
     Name = "配置设置",
     SubName = "保存你的配置重新设置时应用到相应的位置",
-    Logo = "137908403526430",
+    Logo = "118156660240152",
     open = true
 })
 
@@ -5460,7 +5460,7 @@ Feng:Button({
     Name = "保存配置",
     Callback = function()
         if ConfigName == "" then
-            Window:Notification("保存错误", "你他妈倒是写配置名啊", "Error", 2)
+            Window:Notification("保存错误", "你倒是写配置名啊", "Error", 2)
             return
         end
         library:SaveConfig(ConfigName, Window.ConfigFolder)
@@ -5521,7 +5521,7 @@ Feng:Button({
 
 RefreshConfigs()
 
-local FengYu = Window:Tab("设置系统", "137908403526430")
+local FengYu = Window:Tab("设置系统", "117210514734739")
 
 local Feng = FengYu:Section({
     Name = "界面设置"
