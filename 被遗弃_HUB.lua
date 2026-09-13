@@ -378,72 +378,23 @@ Window:Category({
     Opened = true, 
 })
 
-local FengYu = Window:Tab("更新内容", "118156660240152")
-
+local FengYu = Window:Tab("公告", "84411268070942")
 local Feng = FengYu:Section({
-    Name = "奶龙_HUB信息内容",
-    Logo = "118156660240152",
-    open = true
-})
-
-Feng:Video({
-    Video = "rbxassetid://5608337069",
-    Name = "视频",
-    AutoPlay = true,
-    Looped = true,
-    Volume = 0.5,
-    AspectRatio = "16:9",
-    Radius = 8,
-})
-
-Feng:Paragraph({
-    Name = "<font color='#ff6666'>★更新内容★</font>",
-    Content = "●- 重写两次背刺和反背刺\n●-杀手区新添加综合功能(杀死所有)和(斩首者约翰.多的格挡)"
-})
-
-local FengYu = Window:Tab("脚本名单", "118156660240152")
-
-local Feng = FengYu:Section({
-    Name = "人员卡片",
+    Name = "奶龙_HUB公告",
     Logo = "84411268070942",
     open = true
 })
 
-Feng:Social({
-    Name = "奶龙_HUB",
-    SubName = "墨水依旧",
-    SmlName = "你想知道的信息都在这个QQ群里",
-    copy = "1101093219",
-    Cbn = "复制QQ群",
-    Logo = "rbxassetid://118156660240152"
+Feng:Paragraph({
+    Name = "欢迎使用 奶龙_HUB",
+    Content = "作者：墨水依旧和司空\n墨水快手号:zczczczc766\n司空快手号:smalldesikon111和smalldesikon\n开源并公开的4000+\n没惹你就开源的自动给我30年寿命\n公益脚本禁止倒卖\n认准 奶龙_HUB",
+    Image = "rbxassetid://84411268070942",
+    ImageSize = 100,
 })
 
-Feng:Divider()
-
-Feng:Social({
-    Name = "奶龙_HUB创始人",
-    SubName = "墨水依旧",
-    SmlName = "你好呀！",
-    Logo = "rbxassetid://118156660240152"
-})
-
-Feng:Social({
-    Name = "奶龙_HUB现作者",
-    SubName = "墨水依旧",
-    SmlName = "我是奶龙！",
-    copy = "2047955671*",
-    Cbn = "复制QQ号",
-    Logo = "rbxassetid://118156660240152"
-})
-
-Feng:Social({
-    Name = "ink",
-    SubName = "黑客，停止攻击",
-    SmlName = "否则我会上报",
-    copy = "无",
-    Cbn = "复制QQ号",
-    Logo = "rbxassetid://82504261335674"
-})
+Feng:Button({Name="复制作者QQ", Callback=function() setclipboard("2047955671") end})
+Feng:Button({Name="复制作者QQ群", Callback=function() setclipboard("1101093219") end})
+Feng:Button({Name="复制作者副群", Callback=function() setclipboard("1063828524") end})
 
 Window:Category({
     Name = "通用区",
