@@ -1,3 +1,8 @@
+--[[
+    被遗弃.lua — 奶龙_HUB 同款 UI 版
+    仅替换界面层：原有功能代码保持原结构；UI 调用通过兼容层映射到 WindUI。
+]]
+
 local A = game:GetService("StarterGui")
 local B = nil
 local winduiLastError = "未知错误"
@@ -69,6 +74,76 @@ pcall(function()
     })
     B:SetTheme("奶龙_Gold")
 end)
+
+-- 奶龙┃被遗弃 启动动画：显示脚本名，完成后自动消失
+do
+    local Players = game:GetService("Players")
+    local CoreGui = game:GetService("CoreGui")
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "Nailong_Forsaken_Loading"
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+    gui.DisplayOrder = 999999
+    gui.Parent = CoreGui
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.fromScale(1, 1)
+    bg.BackgroundColor3 = Color3.fromRGB(18, 14, 5)
+    bg.BackgroundTransparency = 0.08
+    bg.BorderSizePixel = 0
+    bg.Parent = gui
+
+    local holder = Instance.new("Frame")
+    holder.AnchorPoint = Vector2.new(0.5, 0.5)
+    holder.Position = UDim2.fromScale(0.5, 0.5)
+    holder.Size = UDim2.fromOffset(360, 180)
+    holder.BackgroundTransparency = 1
+    holder.Parent = bg
+
+    local logo = Instance.new("ImageLabel")
+    logo.AnchorPoint = Vector2.new(0.5, 0)
+    logo.Position = UDim2.fromScale(0.5, 0)
+    logo.Size = UDim2.fromOffset(82, 82)
+    logo.BackgroundTransparency = 1
+    logo.Image = "rbxassetid://84411268070942"
+    logo.Parent = holder
+
+    local title = Instance.new("TextLabel")
+    title.AnchorPoint = Vector2.new(0.5, 0)
+    title.Position = UDim2.new(0.5, 0, 0, 92)
+    title.Size = UDim2.fromOffset(350, 38)
+    title.BackgroundTransparency = 1
+    title.Text = "奶龙┃被遗弃"
+    title.TextColor3 = Color3.fromRGB(255, 210, 70)
+    title.TextSize = 26
+    title.Font = Enum.Font.GothamBold
+    title.Parent = holder
+
+    local status = Instance.new("TextLabel")
+    status.AnchorPoint = Vector2.new(0.5, 0)
+    status.Position = UDim2.new(0.5, 0, 0, 130)
+    status.Size = UDim2.fromOffset(350, 24)
+    status.BackgroundTransparency = 1
+    status.Text = "正在加载..."
+    status.TextColor3 = Color3.fromRGB(255, 235, 150)
+    status.TextSize = 14
+    status.Font = Enum.Font.Gotham
+    status.Parent = holder
+
+    task.spawn(function()
+        for i = 1, 24 do
+            if not gui.Parent then return end
+            local dots = string.rep(".", (i - 1) % 4)
+            status.Text = "正在加载" .. dots
+            logo.Rotation = (logo.Rotation + 15) % 360
+            task.wait(0.05)
+        end
+    end)
+
+    task.delay(1.35, function()
+        if gui and gui.Parent then gui:Destroy() end
+    end)
+end
 
 local C = B:CreateWindow({
     Icon = "crown",
@@ -307,6 +382,7 @@ function Window:Tab(name, icon)
     end
     local iconMap = {
         ["更新内容"] = "bell",
+        ["公告"] = "rbxassetid://84411268070942",
         ["脚本名单"] = "users",
         ["服务器"] = "server",
         ["通用区"] = "settings",
@@ -370,18 +446,16 @@ library.SetTheme = function(_, theme)
     pcall(function() B:SetTheme(theme) end)
 end
 
-Window:Category({Name = "介绍", Collapsible = true, Opened = true})
-
 Window:Category({
     Name = "介绍",
     Collapsible = true,
     Opened = true, 
 })
 
-local FengYu = Window:Tab("公告", "84411268070942")
+local FengYu = Window:Tab("公告", "rbxassetid://84411268070942")
 local Feng = FengYu:Section({
     Name = "奶龙_HUB公告",
-    Logo = "84411268070942",
+    Logo = "rbxassetid://84411268070942",
     open = true
 })
 
