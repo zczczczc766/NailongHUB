@@ -317,6 +317,7 @@ end
 local C = B:CreateWindow({
     Icon = "crown",
     Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
+    Author = gradient("@墨水依旧 司空", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
     Folder = "被遗弃",
     Size = UDim2.fromOffset(520, 410),
     Background = "rbxassetid://118156660240152",
@@ -328,109 +329,10 @@ local C = B:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-local openButtonConfig = {
-    Title = gradient("奶龙┃被遗弃", Color3.fromRGB(255,235,120), Color3.fromRGB(255,170,0)),
-    Icon = "crown",
-    StrokeThickness = 2,
-    Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255,235,120)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,190,0)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
-    }),
-    Draggable = true
-}
-pcall(function()
-    C:EditOpenButton(openButtonConfig)
-end)
-
--- 最小化悬浮按钮：保持奶龙_HUB脚本里的皇冠、金色边框和渐变脚本名。
-task.spawn(function()
-    local Players = game:GetService("Players")
-    local playerGui = Players.LocalPlayer and Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-    local roots = {game:GetService("CoreGui"), playerGui}
-    local deadline = os.clock() + 3
-    local function addGradientTitle(button)
-        if not button or not button:IsA("GuiButton") then return false end
-        if button:FindFirstChild("NailongMinimizedTitle") then return true end
-        local label = Instance.new("TextLabel")
-        label.Name = "NailongMinimizedTitle"
-        label.BackgroundTransparency = 1
-        label.BorderSizePixel = 0
-        label.AnchorPoint = Vector2.new(0.5, 0.5)
-        label.Position = UDim2.fromScale(0.5, 0.5)
-        label.Size = UDim2.new(1, -42, 1, -4)
-        label.Text = "奶龙┃被遗弃"
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Center
-        label.TextYAlignment = Enum.TextYAlignment.Center
-        label.TextColor3 = Color3.fromRGB(255,220,80)
-        label.TextStrokeTransparency = 0.75
-        label.ZIndex = 100
-        label.Active = false
-        label.Parent = button
-        local g = Instance.new("UIGradient")
-        g.Name = "MinimizedTitleGoldGradient"
-        g.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(255,235,120)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,190,0)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
-        })
-        g.Parent = label
-        return true
-    end
-    while os.clock() < deadline do
-        local found = false
-        for _, root in ipairs(roots) do
-            if root then
-                for _, obj in ipairs(root:GetDescendants()) do
-                    if obj:IsA("GuiButton") then
-                        local text = tostring(obj:GetAttribute("Title") or obj.Text or "")
-                        local name = string.lower(obj.Name or "")
-                        if text:find("奶龙") or text:find("被遗弃") or name:find("openbutton") or name:find("togglebutton") then
-                            if addGradientTitle(obj) then found = true end
-                        end
-                    end
-                end
-            end
-        end
-        if found then break end
-        task.wait(0.1)
-    end
-end)
+C:EditOpenButton({Title=gradient("奶龙┃被遗弃",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
 local windowFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
-    -- 强制显示顶部标题，避免 WindUI 对 RichText/渐变 Title 的兼容问题。
-    pcall(function()
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Name = "NailongTitle"
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.Position = UDim2.new(0, 58, 0, 6)
-        titleLabel.Size = UDim2.new(0, 260, 0, 32)
-        titleLabel.Font = Enum.Font.GothamBold
-        titleLabel.Text = "奶龙┃被遗弃"
-        titleLabel.TextSize = 18
-        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-        titleLabel.TextYAlignment = Enum.TextYAlignment.Center
-        titleLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
-        titleLabel.ZIndex = 100
-        titleLabel.Parent = windowFrame
-
-        local titleGradient = Instance.new("UIGradient")
-        titleGradient.Name = "TitleGoldGradient"
-        titleGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(255,235,120)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,190,0)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
-        })
-        titleGradient.Parent = titleLabel
-    end)
-    pcall(function()
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 16)
-        corner.Parent = windowFrame
-    end)
     local stroke = Instance.new("UIStroke")
     stroke.Name = "GoldStroke"
     stroke.Thickness = 2
@@ -471,14 +373,15 @@ local function makeTabAdapter(tab)
 
     function adapter:Section(cfg)
         cfg = cfg or {}
-        pcall(function()
-            tab:Paragraph({
-                Title = cfg.Name or "",
-                Desc = cfg.SubName or "",
-                Image = cfg.Logo and (tostring(cfg.Logo):find("rbxassetid://") and cfg.Logo or "rbxassetid://" .. tostring(cfg.Logo)) or nil,
-                ImageSize = 70,
+        local ok, section = pcall(function()
+            return tab:Section({
+                Title = cfg.Name or cfg.Title or "",
+                Opened = cfg.Opened ~= false,
             })
         end)
+        if ok and section then
+            return makeTabAdapter(section)
+        end
         return self
     end
 
@@ -623,7 +526,9 @@ Window.ConfigManager = C.ConfigManager
 
 function Window:Category(cfg)
     cfg = cfg or {}
-    activeSection = C:Section({Title = cfg.Name or "功能", Opened = cfg.Opened ~= false})
+    if not activeSection then
+        activeSection = C:Section({Title = "功能菜单", Opened = true})
+    end
 end
 
 function Window:Tab(name, icon)
