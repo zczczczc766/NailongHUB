@@ -350,21 +350,60 @@ if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") 
 local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
 C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
-if isOpen then
-    windowFrame.Visible = true
-    windowFrame.Position = UDim2.new(0.5, 0, 0.6, 0) 
-    TweenService:Create(windowFrame, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0.5, 0, 0.5, 0), 
-        Size = originalSize
-    }):Play()
-else
-    TweenService:Create(windowFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Position = UDim2.new(0.5, 0, 0.4, 0), 
-        Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 0)
-    }):Play()
-    task.wait(0.25)
-    windowFrame.Visible = false
-end
+-- UI 开关动画：打开时缩放+淡入感，关闭时缩小退出
+pcall(function()
+    local TweenService = game:GetService("TweenService")
+    local main = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui)
+    if not main or not main:IsA("GuiObject") then return end
+
+    local uiScale = main:FindFirstChild("NailongUIAnimationScale")
+    if not uiScale then
+        uiScale = Instance.new("UIScale")
+        uiScale.Name = "NailongUIAnimationScale"
+        uiScale.Scale = 1
+        uiScale.Parent = main
+    end
+
+    local openTween
+    local closeTween
+
+    local function playOpenAnimation()
+        if not main or not main.Parent then return end
+        if openTween then openTween:Cancel() end
+        if closeTween then closeTween:Cancel() end
+        uiScale.Scale = 0.90
+        openTween = TweenService:Create(
+            uiScale,
+            TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Scale = 1}
+        )
+        openTween:Play()
+    end
+
+    local function playCloseAnimation()
+        if not main or not main.Parent then return end
+        if openTween then openTween:Cancel() end
+        if closeTween then closeTween:Cancel() end
+        closeTween = TweenService:Create(
+            uiScale,
+            TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            {Scale = 0.90}
+        )
+        closeTween:Play()
+    end
+
+    -- WindUI 原生提供 OnOpen / OnClose，这里只负责附加动画，不改原来的功能。
+    if C.OnOpen then
+        C:OnOpen(function()
+            task.defer(playOpenAnimation)
+        end)
+    end
+    if C.OnClose then
+        C:OnClose(function()
+            playCloseAnimation()
+        end)
+    end
+end)
 
 local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
