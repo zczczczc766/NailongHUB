@@ -286,69 +286,139 @@ local function gradient(text,startColor,endColor)
 end
 
 local B=nil
-local winduiUrls = {
+local C=nil
+local winduiLastError="未知错误"
+
+local function startupProgress(value,text)
+    if updateStartupProgress then
+        pcall(updateStartupProgress,value,text)
+    end
+end
+
+-- WindUI 地址：保留原来的多地址备用机制
+local winduiUrls={
     "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
     "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
     "https://raw.githubusercontent.com/951357nvjn/dyzs/refs/heads/main/winduiYI.lua"
 }
 
-local winduiLastError = "未知错误"
+startupProgress(35,"正在连接 WindUI...")
 
 for _,url in ipairs(winduiUrls) do
-    local ok, result = pcall(function()
-        local code = game:HttpGet(url)
-        if type(code) ~= "string" or #code < 100 then
+    local ok,result=pcall(function()
+        local code=game:HttpGet(url)
+        if type(code)~="string" or #code<100 then
             error("UI库返回内容为空")
         end
-        code = code:gsub("Close Window", "确定要关闭我吗QAQ")
-        code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
-        code = code:gsub("Cancel", "取消")
-        local loader = loadstring(code)
-        if type(loader) ~= "function" then
-            error("loadstring失败")
+
+        -- 保留你原来能正常使用的文字替换，不删除这三行
+        code=code:gsub("Close Window","确定要关闭我吗QAQ")
+        code=code:gsub("Do you want to close this window%? You will not be able to open it again%.","欢迎你的下次使用(⑉• •⑉)‥♡")
+        code=code:gsub("Cancel","取消")
+
+        local loader=loadstring(code)
+        if type(loader)~="function" then
+            error("WindUI loadstring失败")
         end
-        return loader()
+
+        local library=loader()
+        if type(library)~="table" then
+            error("WindUI初始化没有返回库对象")
+        end
+        if type(library.CreateWindow)~="function" then
+            error("当前WindUI缺少CreateWindow")
+        end
+
+        return library
     end)
+
     if ok and result then
-        B = result
+        B=result
         break
-    else
-        winduiLastError = tostring(result)
     end
+
+    winduiLastError=tostring(result)
     task.wait(0.25)
 end
 
-if updateStartupProgress then updateStartupProgress(65,"正在加载界面...") end
+startupProgress(65,"正在加载界面...")
 
 if not B then
-    pcall(function()
-        A:SetCore("SendNotification",{Title="WindUI加载失败",Text="请检查Delta网络/HttpGet支持",Duration=5})
-    end)
-    warn("[奶龙_HUB] WindUI加载失败:", winduiLastError)
+    warn("[奶龙_HUB] WindUI加载失败:",winduiLastError)
+    safeNotify("奶龙_HUB","WindUI加载失败："..winduiLastError:sub(1,80),5)
     return
 end
 
-pcall(function() B.Transparency=0.3 end)
-
 pcall(function()
-    B:AddTheme({
-        Name = "奶龙_Gold",
-        Accent = Color3.fromRGB(255, 190, 0),
-        Background = Color3.fromRGB(24, 20, 8),
-        Outline = Color3.fromRGB(255, 200, 0),
-        Text = Color3.fromRGB(255, 225, 130),
-        Placeholder = Color3.fromRGB(190, 160, 80),
-        Button = Color3.fromRGB(90, 65, 10),
-        Icon = Color3.fromRGB(255, 200, 0),
-    })
-    B:SetTheme("奶龙_Gold")
+    B.Transparency=0.3
 end)
 
+-- 主题加载失败不会阻止主界面继续创建
+pcall(function()
+    if type(B.AddTheme)=="function" then
+        B:AddTheme({
+            Name="奶龙_Gold",
+            Accent=Color3.fromRGB(255,190,0),
+            Background=Color3.fromRGB(24,20,8),
+            Outline=Color3.fromRGB(255,200,0),
+            Text=Color3.fromRGB(255,225,130),
+            Placeholder=Color3.fromRGB(190,160,80),
+            Button=Color3.fromRGB(90,65,10),
+            Icon=Color3.fromRGB(255,200,0),
+        })
+    end
+    if type(B.SetTheme)=="function" then
+        B:SetTheme("奶龙_Gold")
+    end
+end)
 
-if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
+startupProgress(80,"正在创建界面...")
 
-local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
-C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
+local createOk,createResult=pcall(function()
+    return B:CreateWindow({
+        Icon="crown",
+        Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Folder="奶龙_HUB",
+        Size=UDim2.fromOffset(520,410),
+        Background="rbxassetid://118156660240152",
+        BackgroundImageTransparency=0.25,
+        Theme="奶龙_Gold",
+        User={Enabled=false},
+        SideBarWidth=160,
+        ScrollBarEnabled=true
+    })
+end)
+
+if not createOk or not createResult then
+    warn("[奶龙_HUB] CreateWindow失败:",tostring(createResult))
+    safeNotify("奶龙_HUB","主界面创建失败："..tostring(createResult):sub(1,80),5)
+    return
+end
+
+C=createResult
+
+startupProgress(90,"正在配置界面...")
+
+-- 悬浮打开按钮单独保护，失败不会导致整个UI消失
+pcall(function()
+    if type(C.EditOpenButton)=="function" then
+        C:EditOpenButton({
+            Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+            Icon="crown",
+            StrokeThickness=2,
+            Color=ColorSequence.new({
+                ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
+                ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
+                ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
+            }),
+            Draggable=true
+        })
+    end
+end)
+
+startupProgress(100,"加载完成")
+
 
 pcall(function()
     local TweenService = game:GetService("TweenService")
