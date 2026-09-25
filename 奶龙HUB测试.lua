@@ -446,6 +446,81 @@ if windowFrame then
     end)
 end
 
+
+-- XION UI 发光效果（金色版）
+pcall(function()
+    local mainFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui)
+    if not mainFrame then return end
+
+    local function addGlow(name, pos, size, colors, transparency)
+        local f = mainFrame:FindFirstChild(name)
+        if not f then
+            f = Instance.new("Frame")
+            f.Name = name
+            f.Size = size
+            f.Position = pos
+            f.BackgroundTransparency = 1
+            f.BorderSizePixel = 0
+            f.ZIndex = 0
+            f.Parent = mainFrame
+            local g = Instance.new("UIGradient")
+            g.Color = ColorSequence.new(colors)
+            g.Transparency = NumberSequence.new(transparency)
+            g.Rotation = 90
+            g.Parent = f
+        end
+        return f
+    end
+
+    addGlow("GoldTopGlow", UDim2.new(0,0,0,0), UDim2.new(1,0,0.30,0), {
+        ColorSequenceKeypoint.new(0,Color3.fromRGB(255,180,0)),
+        ColorSequenceKeypoint.new(0.45,Color3.fromRGB(255,220,80)),
+        ColorSequenceKeypoint.new(1,Color3.fromRGB(80,50,0)),
+    }, {
+        NumberSequenceKeypoint.new(0,0.72),
+        NumberSequenceKeypoint.new(0.5,0.86),
+        NumberSequenceKeypoint.new(1,1),
+    })
+
+    addGlow("GoldBottomGlow", UDim2.new(0,0,0.75,0), UDim2.new(1,0,0.25,0), {
+        ColorSequenceKeypoint.new(0,Color3.fromRGB(80,50,0)),
+        ColorSequenceKeypoint.new(0.45,Color3.fromRGB(255,210,50)),
+        ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0)),
+    }, {
+        NumberSequenceKeypoint.new(0,1),
+        NumberSequenceKeypoint.new(0.5,0.86),
+        NumberSequenceKeypoint.new(1,0.90),
+    })
+
+    task.spawn(function()
+        repeat task.wait(0.1) until C.OpenButtonMain and C.OpenButtonMain.Button
+        local button=C.OpenButtonMain.Button
+        local stroke=button:FindFirstChildWhichIsA("UIStroke")
+        if not stroke then
+            stroke=Instance.new("UIStroke")
+            stroke.Thickness=2
+            stroke.Parent=button
+        end
+        local grad=stroke:FindFirstChildWhichIsA("UIGradient")
+        if not grad then
+            grad=Instance.new("UIGradient")
+            grad.Parent=stroke
+        end
+        grad.Color=ColorSequence.new({
+            ColorSequenceKeypoint.new(0,Color3.fromRGB(255,170,0)),
+            ColorSequenceKeypoint.new(0.25,Color3.fromRGB(255,220,80)),
+            ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,245,160)),
+            ColorSequenceKeypoint.new(0.75,Color3.fromRGB(255,200,20)),
+            ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0)),
+        })
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if grad and grad.Parent then
+                grad.Rotation=(tick()*50)%360
+            end
+        end)
+    end)
+end)
+
 local D=C:Section({Title="功能菜单",Opened=true})
 
 
@@ -456,6 +531,17 @@ Z:Paragraph({
     Desc = "作者：墨水依旧和司空\n墨水快手号:zczczczc766\n司空快手号:smalldesikon111和smalldesikon\n开源并公开的4000+\n没惹你就开源的自动给我30年寿命\n公益脚本禁止倒卖\n认准 奶龙_HUB",
     Image = "rbxassetid://84411268070942",
     ImageSize = 100,
+})
+
+-- 信息检测 / 系统信息
+local infoPlayer = game.Players.LocalPlayer
+Z:Paragraph({
+    Title = "信息检测",
+    Desc = string.format("用户名: %s\n显示名: %s\n用户ID: %d\n账号年龄: %d天",
+        infoPlayer.Name, infoPlayer.DisplayName, infoPlayer.UserId, infoPlayer.AccountAge),
+    Image = "info",
+    ImageSize = 20,
+    Color = Color3.fromRGB(255, 195, 0),
 })
 Z:Button({Title="复制作者QQ", Callback=function() setclipboard("2047955671") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ：2047955671", Duration=2}) end})
 Z:Button({Title="复制作者QQ群", Callback=function() setclipboard("1101093219") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ群：1101093219", Duration=2}) end})
@@ -651,6 +737,50 @@ E:Toggle({
     end
 })
 
+-- 删除阴影：可开关，关闭后恢复原本的全局阴影设置
+local originalGlobalShadows = game.Lighting.GlobalShadows
+E:Toggle({
+    Title = "删除阴影",
+    Value = false,
+    Callback = function(v)
+        if v then
+            game.Lighting.GlobalShadows = false
+        else
+            game.Lighting.GlobalShadows = originalGlobalShadows
+        end
+    end
+})
+
+-- 关闭动态模糊：可开关，不删除 BlurEffect，关闭功能时可恢复原状态
+local savedBlurStates = {}
+local dynamicBlurEnabled = false
+local function setDynamicBlurDisabled(disabled)
+    dynamicBlurEnabled = disabled
+    if disabled then
+        savedBlurStates = {}
+        for _, obj in ipairs(game.Lighting:GetDescendants()) do
+            if obj:IsA("BlurEffect") then
+                savedBlurStates[obj] = obj.Enabled
+                obj.Enabled = false
+            end
+        end
+    else
+        for obj, wasEnabled in pairs(savedBlurStates) do
+            if obj and obj.Parent then
+                obj.Enabled = wasEnabled
+            end
+        end
+        savedBlurStates = {}
+    end
+end
+E:Toggle({
+    Title = "关闭动态检测",
+    Value = false,
+    Callback = function(v)
+        setDynamicBlurDisabled(v)
+    end
+})
+
 E:Button({
     Title = "防甩飞",
     Callback = function()
@@ -658,18 +788,107 @@ E:Button({
     end
 })
 
+-- 点击传送：单次执行，点击一次创建传送工具
 E:Button({
-    Title = "防止摔落伤害",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/ink/refs/heads/main/%E9%98%B2%E6%AD%A2%E6%91%94%E8%90%BD%E4%BC%A4%E5%AE%B3.lua"))()
+    Title="点击传送",
+    Callback=function()
+        local tool=Instance.new("Tool")
+        tool.Name="点击传送"
+        tool.RequiresHandle=false
+        tool.Parent=LocalPlayer.Backpack
+        local activated=false
+        tool.Activated:Connect(function()
+            if activated then return end
+            local mouse=LocalPlayer:GetMouse()
+            if not mouse or not mouse.Hit then return end
+            local char=LocalPlayer.Character
+            local hrp=char and char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            activated=true
+            hrp.CFrame=CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
+            tool:Destroy()
+        end)
     end
 })
+
+local antiFallEnabled=false
+local antiFallConnection=nil
+local antiFallVelocity=nil
+
+local function stopAntiFall()
+    if antiFallConnection then
+        antiFallConnection:Disconnect()
+        antiFallConnection=nil
+    end
+    if antiFallVelocity then
+        pcall(function() antiFallVelocity:Destroy() end)
+        antiFallVelocity=nil
+    end
+end
+
+local function startAntiFall()
+    stopAntiFall()
+    local char=LocalPlayer.Character
+    if not char then return end
+    local hrp=char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    antiFallVelocity=Instance.new("BodyVelocity")
+    antiFallVelocity.Name="AntiFall"
+    antiFallVelocity.MaxForce=Vector3.new(0,math.huge,0)
+    antiFallVelocity.Velocity=Vector3.new(0,0,0)
+    antiFallVelocity.Parent=hrp
+
+    antiFallConnection=game:GetService("RunService").Heartbeat:Connect(function()
+        if not antiFallEnabled then return end
+        if not hrp or not hrp.Parent then return end
+        if hrp.Position.Y < -50 then
+            hrp.CFrame=CFrame.new(hrp.Position.X,100,hrp.Position.Z)
+        end
+    end)
+end
+
+E:Toggle({
+    Title="防止摔落伤害",
+    Value=false,
+    Callback=function(v)
+        antiFallEnabled=v
+        if v then
+            startAntiFall()
+        else
+            stopAntiFall()
+        end
+    end
+})
+
+LocalPlayer.CharacterAdded:Connect(function()
+    if antiFallEnabled then
+        task.wait(0.15)
+        startAntiFall()
+    end
+end)
 
 E:Button({Title = "祖国人",Callback = function()loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/homelander-by-GioBolqv1-/main/homelander.lua"))()end})
 
 E:Button({Title="无敌少侠飞行",Callback=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/396abc/Script/refs/heads/main/MobileFly.lua"))()end})
 
 E:Button({Title="无敌少侠大全",Callback=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/invincible-characters-animations-by-GioBolqv1-/refs/heads/main/universal.lua"))()end})
+
+-- XION「设置」中除前两个功能外的剩余功能，放到通用最下面
+E:Button({
+    Title="重进服务器",
+    Callback=function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,LocalPlayer)
+    end
+})
+
+E:Button({
+    Title="离开服务器",
+    Callback=function()
+        game:Shutdown()
+    end
+})
+
 
 local function forceChatVisible()
     local player=game.Players.LocalPlayer
