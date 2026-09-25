@@ -324,7 +324,7 @@ if not B then
     pcall(function()
         A:SetCore("SendNotification",{Title="WindUI加载失败",Text="请检查Delta网络/HttpGet支持",Duration=5})
     end)
-    warn("[ink_HUB] WindUI加载失败:", winduiLastError)
+    warn("[奶龙_HUB] WindUI加载失败:", winduiLastError)
     return
 end
 
@@ -350,7 +350,6 @@ if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") 
 local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
 C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
--- UI 开关动画：打开时缩放+淡入感，关闭时缩小退出
 pcall(function()
     local TweenService = game:GetService("TweenService")
     local main = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui)
@@ -392,7 +391,6 @@ pcall(function()
         closeTween:Play()
     end
 
-    -- WindUI 原生提供 OnOpen / OnClose，这里只负责附加动画，不改原来的功能。
     if C.OnOpen then
         C:OnOpen(function()
             task.defer(playOpenAnimation)
@@ -447,7 +445,6 @@ if windowFrame then
 end
 
 
--- XION UI 发光效果（金色版）
 pcall(function()
     local mainFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui)
     if not mainFrame then return end
@@ -533,7 +530,6 @@ Z:Paragraph({
     ImageSize = 100,
 })
 
--- 信息检测 / 系统信息
 local infoPlayer = game.Players.LocalPlayer
 Z:Paragraph({
     Title = "信息检测",
@@ -737,7 +733,6 @@ E:Toggle({
     end
 })
 
--- 删除阴影：可开关，关闭后恢复原本的全局阴影设置
 local originalGlobalShadows = game.Lighting.GlobalShadows
 E:Toggle({
     Title = "删除阴影",
@@ -751,7 +746,6 @@ E:Toggle({
     end
 })
 
--- 关闭动态模糊：可开关，不删除 BlurEffect，关闭功能时可恢复原状态
 local savedBlurStates = {}
 local dynamicBlurEnabled = false
 local function setDynamicBlurDisabled(disabled)
@@ -788,7 +782,6 @@ E:Button({
     end
 })
 
--- 点击传送：单次执行，点击一次创建传送工具
 E:Button({
     Title="点击传送",
     Callback=function()
@@ -874,22 +867,6 @@ E:Button({Title="无敌少侠飞行",Callback=function()loadstring(game:HttpGet(
 
 E:Button({Title="无敌少侠大全",Callback=function()loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/invincible-characters-animations-by-GioBolqv1-/refs/heads/main/universal.lua"))()end})
 
--- XION「设置」中除前两个功能外的剩余功能，放到通用最下面
-E:Button({
-    Title="重进服务器",
-    Callback=function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,LocalPlayer)
-    end
-})
-
-E:Button({
-    Title="离开服务器",
-    Callback=function()
-        game:Shutdown()
-    end
-})
-
-
 local function forceChatVisible()
     local player=game.Players.LocalPlayer
     local StarterGui=game:GetService("StarterGui")
@@ -931,6 +908,20 @@ E:Button({Title="强制显示聊天框",Callback=function()forceChatVisible()end
 E:Button({Title="走路撞人",Callback=function()loadstring(game:HttpGet(('https://raw.githubusercontent.com/0Ben1/fe/main/obf_5wpM7bBcOPspmX7lQ3m75SrYNWqxZ858ai3tJdEAId6jSI05IOUB224FQ0VSAswH.lua.txt'),true))()end})
 
 E:Button({Title="铁拳打人",Callback=function()loadstring(game:HttpGet(('https://raw.githubusercontent.com/0Ben1/fe/main/obf_rf6iQURzu1fqrytcnLBAvW34C9N55kS9g9G3CKz086rC47M6632sEd4ZZYB0AYgV.lua.txt'),true))()end})
+
+E:Button({
+    Title="重进服务器",
+    Callback=function()
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,LocalPlayer)
+    end
+})
+
+E:Button({
+    Title="离开服务器",
+    Callback=function()
+        game:Shutdown()
+    end
+})
 
 local P = D:Tab({Title="透视", Icon="eye"})
 
@@ -1228,7 +1219,7 @@ end
 local function addNPCESP(obj)
     if not npcEspEnabled or not isNPCModel(obj) or npcHighlights[obj] then return end
     local h = Instance.new("Highlight")
-    h.Name = "ink_HUB_NPC_ESP"
+    h.Name = "奶龙_HUB_NPC_ESP"
     h.Adornee = obj
     h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     h.FillTransparency = 0.75
