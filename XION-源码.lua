@@ -1,5 +1,3 @@
--- lyy开源 垃圾源码
-
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
