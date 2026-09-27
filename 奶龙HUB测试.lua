@@ -286,139 +286,69 @@ local function gradient(text,startColor,endColor)
 end
 
 local B=nil
-local C=nil
-local winduiLastError="未知错误"
-
-local function startupProgress(value,text)
-    if updateStartupProgress then
-        pcall(updateStartupProgress,value,text)
-    end
-end
-
--- WindUI 地址：保留原来的多地址备用机制
-local winduiUrls={
+local winduiUrls = {
     "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
     "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
     "https://raw.githubusercontent.com/951357nvjn/dyzs/refs/heads/main/winduiYI.lua"
 }
 
-startupProgress(35,"正在连接 WindUI...")
+local winduiLastError = "未知错误"
 
 for _,url in ipairs(winduiUrls) do
-    local ok,result=pcall(function()
-        local code=game:HttpGet(url)
-        if type(code)~="string" or #code<100 then
+    local ok, result = pcall(function()
+        local code = game:HttpGet(url)
+        if type(code) ~= "string" or #code < 100 then
             error("UI库返回内容为空")
         end
-
-        -- 保留你原来能正常使用的文字替换，不删除这三行
-        code=code:gsub("Close Window","确定要关闭我吗QAQ")
-        code=code:gsub("Do you want to close this window%? You will not be able to open it again%.","欢迎你的下次使用(⑉• •⑉)‥♡")
-        code=code:gsub("Cancel","取消")
-
-        local loader=loadstring(code)
-        if type(loader)~="function" then
-            error("WindUI loadstring失败")
+        code = code:gsub("Close Window", "确定要关闭我吗QAQ")
+        code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
+        code = code:gsub("Cancel", "取消")
+        local loader = loadstring(code)
+        if type(loader) ~= "function" then
+            error("loadstring失败")
         end
-
-        local library=loader()
-        if type(library)~="table" then
-            error("WindUI初始化没有返回库对象")
-        end
-        if type(library.CreateWindow)~="function" then
-            error("当前WindUI缺少CreateWindow")
-        end
-
-        return library
+        return loader()
     end)
-
     if ok and result then
-        B=result
+        B = result
         break
+    else
+        winduiLastError = tostring(result)
     end
-
-    winduiLastError=tostring(result)
     task.wait(0.25)
 end
 
-startupProgress(65,"正在加载界面...")
+if updateStartupProgress then updateStartupProgress(65,"正在加载界面...") end
 
 if not B then
-    warn("[奶龙_HUB] WindUI加载失败:",winduiLastError)
-    safeNotify("奶龙_HUB","WindUI加载失败："..winduiLastError:sub(1,80),5)
+    pcall(function()
+        A:SetCore("SendNotification",{Title="WindUI加载失败",Text="请检查Delta网络/HttpGet支持",Duration=5})
+    end)
+    warn("[ink_HUB] WindUI加载失败:", winduiLastError)
     return
 end
 
+pcall(function() B.Transparency=0.3 end)
+
 pcall(function()
-    B.Transparency=0.3
-end)
-
--- 主题加载失败不会阻止主界面继续创建
-pcall(function()
-    if type(B.AddTheme)=="function" then
-        B:AddTheme({
-            Name="奶龙_Gold",
-            Accent=Color3.fromRGB(255,190,0),
-            Background=Color3.fromRGB(24,20,8),
-            Outline=Color3.fromRGB(255,200,0),
-            Text=Color3.fromRGB(255,225,130),
-            Placeholder=Color3.fromRGB(190,160,80),
-            Button=Color3.fromRGB(90,65,10),
-            Icon=Color3.fromRGB(255,200,0),
-        })
-    end
-    if type(B.SetTheme)=="function" then
-        B:SetTheme("奶龙_Gold")
-    end
-end)
-
-startupProgress(80,"正在创建界面...")
-
-local createOk,createResult=pcall(function()
-    return B:CreateWindow({
-        Icon="crown",
-        Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-        Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-        Folder="奶龙_HUB",
-        Size=UDim2.fromOffset(520,410),
-        Background="rbxassetid://118156660240152",
-        BackgroundImageTransparency=0.25,
-        Theme="奶龙_Gold",
-        User={Enabled=false},
-        SideBarWidth=160,
-        ScrollBarEnabled=true
+    B:AddTheme({
+        Name = "奶龙_Gold",
+        Accent = Color3.fromRGB(255, 190, 0),
+        Background = Color3.fromRGB(24, 20, 8),
+        Outline = Color3.fromRGB(255, 200, 0),
+        Text = Color3.fromRGB(255, 225, 130),
+        Placeholder = Color3.fromRGB(190, 160, 80),
+        Button = Color3.fromRGB(90, 65, 10),
+        Icon = Color3.fromRGB(255, 200, 0),
     })
+    B:SetTheme("奶龙_Gold")
 end)
 
-if not createOk or not createResult then
-    warn("[奶龙_HUB] CreateWindow失败:",tostring(createResult))
-    safeNotify("奶龙_HUB","主界面创建失败："..tostring(createResult):sub(1,80),5)
-    return
-end
 
-C=createResult
+if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
 
-startupProgress(90,"正在配置界面...")
-
--- 悬浮打开按钮单独保护，失败不会导致整个UI消失
-pcall(function()
-    if type(C.EditOpenButton)=="function" then
-        C:EditOpenButton({
-            Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-            Icon="crown",
-            StrokeThickness=2,
-            Color=ColorSequence.new({
-                ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
-                ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
-                ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
-            }),
-            Draggable=true
-        })
-    end
-end)
-
-startupProgress(100,"加载完成")
-
+local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
+C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
 
 pcall(function()
     local TweenService = game:GetService("TweenService")
@@ -433,44 +363,55 @@ pcall(function()
         uiScale.Parent = main
     end
 
-    local openTween
-    local closeTween
+    local busy = false
+    local firstState = true
 
-    local function playOpenAnimation()
-        if not main or not main.Parent then return end
-        if openTween then openTween:Cancel() end
-        if closeTween then closeTween:Cancel() end
-        uiScale.Scale = 0.90
-        openTween = TweenService:Create(
+    local function openAnim()
+        if busy or not main.Parent then return end
+        busy = true
+        uiScale.Scale = 0.88
+        local tween = TweenService:Create(
             uiScale,
-            TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            TweenInfo.new(0.30, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
             {Scale = 1}
         )
-        openTween:Play()
+        tween:Play()
+        task.spawn(function()
+            tween.Completed:Wait()
+            busy = false
+        end)
     end
 
-    local function playCloseAnimation()
-        if not main or not main.Parent then return end
-        if openTween then openTween:Cancel() end
-        if closeTween then closeTween:Cancel() end
-        closeTween = TweenService:Create(
+    local function closeAnim()
+        if busy or not main.Parent then return end
+        busy = true
+        main.Visible = true
+        uiScale.Scale = 1
+        local tween = TweenService:Create(
             uiScale,
             TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-            {Scale = 0.90}
+            {Scale = 0.88}
         )
-        closeTween:Play()
+        tween:Play()
+        task.spawn(function()
+            tween.Completed:Wait()
+            if main and main.Parent then
+                main.Visible = false
+                uiScale.Scale = 1
+            end
+            busy = false
+        end)
     end
 
-    if C.OnOpen then
-        C:OnOpen(function()
-            task.defer(playOpenAnimation)
-        end)
-    end
-    if C.OnClose then
-        C:OnClose(function()
-            playCloseAnimation()
-        end)
-    end
+    firstState = false
+    main:GetPropertyChangedSignal("Visible"):Connect(function()
+        if firstState or busy then return end
+        if main.Visible then
+            openAnim()
+        else
+            closeAnim()
+        end
+    end)
 end)
 
 local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
@@ -514,80 +455,6 @@ if windowFrame then
     end)
 end
 
-
-pcall(function()
-    local mainFrame = C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui)
-    if not mainFrame then return end
-
-    local function addGlow(name, pos, size, colors, transparency)
-        local f = mainFrame:FindFirstChild(name)
-        if not f then
-            f = Instance.new("Frame")
-            f.Name = name
-            f.Size = size
-            f.Position = pos
-            f.BackgroundTransparency = 1
-            f.BorderSizePixel = 0
-            f.ZIndex = 0
-            f.Parent = mainFrame
-            local g = Instance.new("UIGradient")
-            g.Color = ColorSequence.new(colors)
-            g.Transparency = NumberSequence.new(transparency)
-            g.Rotation = 90
-            g.Parent = f
-        end
-        return f
-    end
-
-    addGlow("GoldTopGlow", UDim2.new(0,0,0,0), UDim2.new(1,0,0.30,0), {
-        ColorSequenceKeypoint.new(0,Color3.fromRGB(255,180,0)),
-        ColorSequenceKeypoint.new(0.45,Color3.fromRGB(255,220,80)),
-        ColorSequenceKeypoint.new(1,Color3.fromRGB(80,50,0)),
-    }, {
-        NumberSequenceKeypoint.new(0,0.72),
-        NumberSequenceKeypoint.new(0.5,0.86),
-        NumberSequenceKeypoint.new(1,1),
-    })
-
-    addGlow("GoldBottomGlow", UDim2.new(0,0,0.75,0), UDim2.new(1,0,0.25,0), {
-        ColorSequenceKeypoint.new(0,Color3.fromRGB(80,50,0)),
-        ColorSequenceKeypoint.new(0.45,Color3.fromRGB(255,210,50)),
-        ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0)),
-    }, {
-        NumberSequenceKeypoint.new(0,1),
-        NumberSequenceKeypoint.new(0.5,0.86),
-        NumberSequenceKeypoint.new(1,0.90),
-    })
-
-    task.spawn(function()
-        repeat task.wait(0.1) until C.OpenButtonMain and C.OpenButtonMain.Button
-        local button=C.OpenButtonMain.Button
-        local stroke=button:FindFirstChildWhichIsA("UIStroke")
-        if not stroke then
-            stroke=Instance.new("UIStroke")
-            stroke.Thickness=2
-            stroke.Parent=button
-        end
-        local grad=stroke:FindFirstChildWhichIsA("UIGradient")
-        if not grad then
-            grad=Instance.new("UIGradient")
-            grad.Parent=stroke
-        end
-        grad.Color=ColorSequence.new({
-            ColorSequenceKeypoint.new(0,Color3.fromRGB(255,170,0)),
-            ColorSequenceKeypoint.new(0.25,Color3.fromRGB(255,220,80)),
-            ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,245,160)),
-            ColorSequenceKeypoint.new(0.75,Color3.fromRGB(255,200,20)),
-            ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0)),
-        })
-        game:GetService("RunService").Heartbeat:Connect(function()
-            if grad and grad.Parent then
-                grad.Rotation=(tick()*50)%360
-            end
-        end)
-    end)
-end)
-
 local D=C:Section({Title="功能菜单",Opened=true})
 
 
@@ -598,16 +465,6 @@ Z:Paragraph({
     Desc = "作者：墨水依旧和司空\n墨水快手号:zczczczc766\n司空快手号:smalldesikon111和smalldesikon\n开源并公开的4000+\n没惹你就开源的自动给我30年寿命\n公益脚本禁止倒卖\n认准 奶龙_HUB",
     Image = "rbxassetid://84411268070942",
     ImageSize = 100,
-})
-
-local infoPlayer = game.Players.LocalPlayer
-Z:Paragraph({
-    Title = "信息检测",
-    Desc = string.format("用户名: %s\n显示名: %s\n用户ID: %d\n账号年龄: %d天",
-        infoPlayer.Name, infoPlayer.DisplayName, infoPlayer.UserId, infoPlayer.AccountAge),
-    Image = "info",
-    ImageSize = 20,
-    Color = Color3.fromRGB(255, 195, 0),
 })
 Z:Button({Title="复制作者QQ", Callback=function() setclipboard("2047955671") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ：2047955671", Duration=2}) end})
 Z:Button({Title="复制作者QQ群", Callback=function() setclipboard("1101093219") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ群：1101093219", Duration=2}) end})
@@ -803,48 +660,6 @@ E:Toggle({
     end
 })
 
-local originalGlobalShadows = game.Lighting.GlobalShadows
-E:Toggle({
-    Title = "删除阴影",
-    Value = false,
-    Callback = function(v)
-        if v then
-            game.Lighting.GlobalShadows = false
-        else
-            game.Lighting.GlobalShadows = originalGlobalShadows
-        end
-    end
-})
-
-local savedBlurStates = {}
-local dynamicBlurEnabled = false
-local function setDynamicBlurDisabled(disabled)
-    dynamicBlurEnabled = disabled
-    if disabled then
-        savedBlurStates = {}
-        for _, obj in ipairs(game.Lighting:GetDescendants()) do
-            if obj:IsA("BlurEffect") then
-                savedBlurStates[obj] = obj.Enabled
-                obj.Enabled = false
-            end
-        end
-    else
-        for obj, wasEnabled in pairs(savedBlurStates) do
-            if obj and obj.Parent then
-                obj.Enabled = wasEnabled
-            end
-        end
-        savedBlurStates = {}
-    end
-end
-E:Toggle({
-    Title = "关闭动态检测",
-    Value = false,
-    Callback = function(v)
-        setDynamicBlurDisabled(v)
-    end
-})
-
 E:Button({
     Title = "防甩飞",
     Callback = function()
@@ -853,83 +668,11 @@ E:Button({
 })
 
 E:Button({
-    Title="点击传送",
-    Callback=function()
-        local tool=Instance.new("Tool")
-        tool.Name="点击传送"
-        tool.RequiresHandle=false
-        tool.Parent=LocalPlayer.Backpack
-        local activated=false
-        tool.Activated:Connect(function()
-            if activated then return end
-            local mouse=LocalPlayer:GetMouse()
-            if not mouse or not mouse.Hit then return end
-            local char=LocalPlayer.Character
-            local hrp=char and char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            activated=true
-            hrp.CFrame=CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
-            tool:Destroy()
-        end)
+    Title = "防止摔落伤害",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/zczczczc766/ink/refs/heads/main/%E9%98%B2%E6%AD%A2%E6%91%94%E8%90%BD%E4%BC%A4%E5%AE%B3.lua"))()
     end
 })
-
-local antiFallEnabled=false
-local antiFallConnection=nil
-local antiFallVelocity=nil
-
-local function stopAntiFall()
-    if antiFallConnection then
-        antiFallConnection:Disconnect()
-        antiFallConnection=nil
-    end
-    if antiFallVelocity then
-        pcall(function() antiFallVelocity:Destroy() end)
-        antiFallVelocity=nil
-    end
-end
-
-local function startAntiFall()
-    stopAntiFall()
-    local char=LocalPlayer.Character
-    if not char then return end
-    local hrp=char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    antiFallVelocity=Instance.new("BodyVelocity")
-    antiFallVelocity.Name="AntiFall"
-    antiFallVelocity.MaxForce=Vector3.new(0,math.huge,0)
-    antiFallVelocity.Velocity=Vector3.new(0,0,0)
-    antiFallVelocity.Parent=hrp
-
-    antiFallConnection=game:GetService("RunService").Heartbeat:Connect(function()
-        if not antiFallEnabled then return end
-        if not hrp or not hrp.Parent then return end
-        if hrp.Position.Y < -50 then
-            hrp.CFrame=CFrame.new(hrp.Position.X,100,hrp.Position.Z)
-        end
-    end)
-end
-
-E:Toggle({
-    Title="防止摔落伤害",
-    Value=false,
-    Callback=function(v)
-        antiFallEnabled=v
-        if v then
-            startAntiFall()
-        else
-            stopAntiFall()
-        end
-    end
-})
-
-LocalPlayer.CharacterAdded:Connect(function()
-    if antiFallEnabled then
-        task.wait(0.15)
-        startAntiFall()
-    end
-end)
 
 E:Button({Title = "祖国人",Callback = function()loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/homelander-by-GioBolqv1-/main/homelander.lua"))()end})
 
@@ -978,20 +721,6 @@ E:Button({Title="强制显示聊天框",Callback=function()forceChatVisible()end
 E:Button({Title="走路撞人",Callback=function()loadstring(game:HttpGet(('https://raw.githubusercontent.com/0Ben1/fe/main/obf_5wpM7bBcOPspmX7lQ3m75SrYNWqxZ858ai3tJdEAId6jSI05IOUB224FQ0VSAswH.lua.txt'),true))()end})
 
 E:Button({Title="铁拳打人",Callback=function()loadstring(game:HttpGet(('https://raw.githubusercontent.com/0Ben1/fe/main/obf_rf6iQURzu1fqrytcnLBAvW34C9N55kS9g9G3CKz086rC47M6632sEd4ZZYB0AYgV.lua.txt'),true))()end})
-
-E:Button({
-    Title="重进服务器",
-    Callback=function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,LocalPlayer)
-    end
-})
-
-E:Button({
-    Title="离开服务器",
-    Callback=function()
-        game:Shutdown()
-    end
-})
 
 local P = D:Tab({Title="透视", Icon="eye"})
 
@@ -1289,7 +1018,7 @@ end
 local function addNPCESP(obj)
     if not npcEspEnabled or not isNPCModel(obj) or npcHighlights[obj] then return end
     local h = Instance.new("Highlight")
-    h.Name = "奶龙_HUB_NPC_ESP"
+    h.Name = "ink_HUB_NPC_ESP"
     h.Adornee = obj
     h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     h.FillTransparency = 0.75
