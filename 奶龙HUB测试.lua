@@ -289,34 +289,21 @@ local B = nil
 local winduiLastError = "未知错误"
 
 local ok, result = pcall(function()
-    local urls = {
-        "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
-        "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
-    }
-
-    local lastError
-    for _, url in ipairs(urls) do
-        local got, code = pcall(function()
-            return game:HttpGet(url, true)
-        end)
-
-        if got and type(code) == "string" and #code > 100 then
-            local loader = loadstring(code)
-            if type(loader) == "function" then
-                local loaded, lib = pcall(loader)
-                if loaded and lib then
-                    return lib
-                end
-                lastError = tostring(lib)
-            else
-                lastError = "WindUI loadstring失败"
-            end
-        else
-            lastError = tostring(code)
-        end
+    -- 固定 WindUI 版本，避免 latest/dist 更新导致旧 UI 参数失效
+    local code = game:HttpGet(
+        "https://github.com/Footagesus/WindUI/releases/download/1.6.66/main.lua",
+        true
+    )
+    if type(code) ~= "string" or #code < 100 then
+        error("WindUI下载内容为空")
     end
 
-    error(lastError or "WindUI下载失败")
+    local loader = loadstring(code)
+    if type(loader) ~= "function" then
+        error("WindUI loadstring失败")
+    end
+
+    return loader()
 end)
 
 if ok and result then
@@ -358,8 +345,8 @@ local C
 local windowOk, windowResult = pcall(function()
     return B:CreateWindow({
         Icon = "crown",
-        Title = gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-        Author = gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Title = "奶龙_HUB",
+        Author = "@墨水依旧 司空",
         Folder = "奶龙_HUB",
         Size = UDim2.fromOffset(520,410),
         Background = "rbxassetid://118156660240152",
@@ -369,6 +356,20 @@ local windowOk, windowResult = pcall(function()
         SideBarWidth = 160,
         ScrollBarEnabled = true,
         NewElements = true,
+
+        -- 按当前 WindUI 官方窗口配置直接创建悬浮打开按钮
+        OpenButton = {
+            Title = "奶龙_HUB",
+            Icon = "crown",
+            StrokeThickness = 2,
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
+                ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
+                ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
+            }),
+            Draggable = true,
+            Enabled = true,
+        },
     })
 end)
 
@@ -377,7 +378,7 @@ if not windowOk or not windowResult then
     pcall(function()
         A:SetCore("SendNotification",{
             Title="UI创建失败",
-            Text="WindUI窗口创建失败，请检查执行器兼容性",
+            Text="CreateWindow失败，请查看执行器报错信息",
             Duration=6
         })
     end)
@@ -386,20 +387,6 @@ if not windowOk or not windowResult then
 end
 
 C = windowResult
-
-pcall(function()
-    C:EditOpenButton({
-        Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
-        Icon="crown",
-        StrokeThickness=2,
-        Color=ColorSequence.new({
-            ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
-            ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
-            ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
-        }),
-        Draggable=true
-    })
-end)
 
 local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
