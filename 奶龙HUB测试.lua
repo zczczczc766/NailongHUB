@@ -287,9 +287,7 @@ end
 
 local B=nil
 local winduiUrls = {
-    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
     "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
-    "https://raw.githubusercontent.com/951357nvjn/dyzs/refs/heads/main/winduiYI.lua"
 }
 
 local winduiLastError = "未知错误"
@@ -324,7 +322,7 @@ if not B then
     pcall(function()
         A:SetCore("SendNotification",{Title="WindUI加载失败",Text="请检查Delta网络/HttpGet支持",Duration=5})
     end)
-    warn("[ink_HUB] WindUI加载失败:", winduiLastError)
+    warn("[奶龙_HUB] WindUI加载失败:", winduiLastError)
     return
 end
 
@@ -954,7 +952,7 @@ end
 local function addNPCESP(obj)
     if not npcEspEnabled or not isNPCModel(obj) or npcHighlights[obj] then return end
     local h = Instance.new("Highlight")
-    h.Name = "ink_HUB_NPC_ESP"
+    h.Name = "奶龙_HUB_NPC_ESP"
     h.Adornee = obj
     h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     h.FillTransparency = 0.75
