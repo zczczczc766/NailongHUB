@@ -285,35 +285,31 @@ local function gradient(text,startColor,endColor)
     return result
 end
 
-local B=nil
-local winduiUrls = {
-    "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
-}
-
+local B = nil
 local winduiLastError = "未知错误"
 
-for _,url in ipairs(winduiUrls) do
-    local ok, result = pcall(function()
-        local code = game:HttpGet(url)
-        if type(code) ~= "string" or #code < 100 then
-            error("UI库返回内容为空")
-        end
-        code = code:gsub("Close Window", "确定要关闭我吗QAQ")
-        code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
-        code = code:gsub("Cancel", "取消")
-        local loader = loadstring(code)
-        if type(loader) ~= "function" then
-            error("loadstring失败")
-        end
-        return loader()
-    end)
-    if ok and result then
-        B = result
-        break
-    else
-        winduiLastError = tostring(result)
+local ok, result = pcall(function()
+    local code = game:HttpGet(
+        "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
+        true
+    )
+    if type(code) ~= "string" or #code < 100 then
+        error("UI库返回内容为空")
     end
-    task.wait(0.25)
+    code = code:gsub("Close Window", "确定要关闭我吗QAQ")
+    code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
+    code = code:gsub("Cancel", "取消")
+    local loader = loadstring(code)
+    if type(loader) ~= "function" then
+        error("loadstring失败")
+    end
+    return loader()
+end)
+
+if ok and result then
+    B = result
+else
+    winduiLastError = tostring(result)
 end
 
 if updateStartupProgress then updateStartupProgress(65,"正在加载界面...") end
