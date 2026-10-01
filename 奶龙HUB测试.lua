@@ -289,21 +289,34 @@ local B = nil
 local winduiLastError = "未知错误"
 
 local ok, result = pcall(function()
-    local code = game:HttpGet(
+    local urls = {
+        "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
         "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
-        true
-    )
-    if type(code) ~= "string" or #code < 100 then
-        error("UI库返回内容为空")
+    }
+
+    local lastError
+    for _, url in ipairs(urls) do
+        local got, code = pcall(function()
+            return game:HttpGet(url, true)
+        end)
+
+        if got and type(code) == "string" and #code > 100 then
+            local loader = loadstring(code)
+            if type(loader) == "function" then
+                local loaded, lib = pcall(loader)
+                if loaded and lib then
+                    return lib
+                end
+                lastError = tostring(lib)
+            else
+                lastError = "WindUI loadstring失败"
+            end
+        else
+            lastError = tostring(code)
+        end
     end
-    code = code:gsub("Close Window", "确定要关闭我吗QAQ")
-    code = code:gsub("Do you want to close this window%? You will not be able to open it again%.", "欢迎你的下次使用(⑉• •⑉)‥♡")
-    code = code:gsub("Cancel", "取消")
-    local loader = loadstring(code)
-    if type(loader) ~= "function" then
-        error("loadstring失败")
-    end
-    return loader()
+
+    error(lastError or "WindUI下载失败")
 end)
 
 if ok and result then
@@ -341,8 +354,52 @@ end)
 
 if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
 
-local C=B:CreateWindow({Icon="crown",Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Author=gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Folder="奶龙_HUB",Size=UDim2.fromOffset(520,410),Background="rbxassetid://118156660240152",BackgroundImageTransparency=0.25,Theme="奶龙_Gold",User={Enabled=false},SideBarWidth=160,ScrollBarEnabled=true})
-C:EditOpenButton({Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),Icon="crown",StrokeThickness=2,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))}),Draggable=true})
+local C
+local windowOk, windowResult = pcall(function()
+    return B:CreateWindow({
+        Icon = "crown",
+        Title = gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Author = gradient("@墨水依旧 司空",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Folder = "奶龙_HUB",
+        Size = UDim2.fromOffset(520,410),
+        Background = "rbxassetid://118156660240152",
+        BackgroundImageTransparency = 0.25,
+        Theme = "奶龙_Gold",
+        User = {Enabled=false},
+        SideBarWidth = 160,
+        ScrollBarEnabled = true,
+        NewElements = true,
+    })
+end)
+
+if not windowOk or not windowResult then
+    winduiLastError = tostring(windowResult)
+    pcall(function()
+        A:SetCore("SendNotification",{
+            Title="UI创建失败",
+            Text="WindUI窗口创建失败，请检查执行器兼容性",
+            Duration=6
+        })
+    end)
+    warn("[奶龙_HUB] CreateWindow失败:", winduiLastError)
+    return
+end
+
+C = windowResult
+
+pcall(function()
+    C:EditOpenButton({
+        Title=gradient("奶龙_HUB",Color3.fromRGB(255,235,120),Color3.fromRGB(255,170,0)),
+        Icon="crown",
+        StrokeThickness=2,
+        Color=ColorSequence.new({
+            ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
+            ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
+            ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
+        }),
+        Draggable=true
+    })
+end)
 
 local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
 if windowFrame then
