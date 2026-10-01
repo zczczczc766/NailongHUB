@@ -356,7 +356,7 @@ C = windowResult
 
 -- 暂不调用旧版 EditOpenButton，避免 UI 版本兼容问题。
 
-local D=C:Section({Title="功能菜单",Opened=true})
+local D=C -- 兼容模式：直接在 Window 上创建 Tab，绕过 Section 容器兼容问题
 
 
 
