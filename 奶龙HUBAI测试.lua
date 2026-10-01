@@ -322,22 +322,8 @@ if not B then
     return
 end
 
-pcall(function() B.Transparency=0.3 end)
 
-pcall(function()
-    B:AddTheme({
-        Name = "奶龙_Gold",
-        Accent = Color3.fromRGB(255, 190, 0),
-        Background = Color3.fromRGB(24, 20, 8),
-        Outline = Color3.fromRGB(255, 200, 0),
-        Text = Color3.fromRGB(255, 225, 130),
-        Placeholder = Color3.fromRGB(190, 160, 80),
-        Button = Color3.fromRGB(90, 65, 10),
-        Icon = Color3.fromRGB(255, 200, 0),
-    })
-    B:SetTheme("奶龙_Gold")
-end)
-
+-- 已移除自定义主题，使用 WindUI 默认主题以确保兼容。
 
 if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
 
@@ -368,19 +354,7 @@ end
 
 C = windowResult
 
--- 窗口成功后再单独设置打开按钮，避免旧版 CreateWindow 参数不兼容。
-pcall(function()
-    if C.EditOpenButton then
-        C:EditOpenButton({
-            Title="奶龙_HUB",
-            Icon="moon",
-            StrokeThickness=2,
-            Draggable=true,
-            Enabled=true,
-        })
-    end
-end)
-
+-- 暂不调用旧版 EditOpenButton，避免 UI 版本兼容问题。
 
 local D=C:Section({Title="功能菜单",Opened=true})
 
