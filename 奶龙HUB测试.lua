@@ -33,242 +33,10 @@ local ok,err=xpcall(function()
 
 local A=game:GetService("StarterGui")
 
-local finishStartup
-local updateStartupProgress
-pcall(function()
-    local Players = game:GetService("Players")
-    local TweenService = game:GetService("TweenService")
-    local CoreGui = game:GetService("CoreGui")
-    local playerGui = Players.LocalPlayer and Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-
-    local oldGui = CoreGui:FindFirstChild("NailongHubStartup")
-    if oldGui then oldGui:Destroy() end
-    if playerGui then
-        local oldPlayerGui = playerGui:FindFirstChild("NailongHubStartup")
-        if oldPlayerGui then oldPlayerGui:Destroy() end
-    end
-
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "NailongHubStartup"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.DisplayOrder = 999999
-    gui.Parent = playerGui or CoreGui
-
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.fromScale(1,1)
-    bg.BackgroundColor3 = Color3.fromRGB(8,7,3)
-    bg.BackgroundTransparency = 0.12
-    bg.BorderSizePixel = 0
-    bg.Parent = gui
-
-    local decorLayer = Instance.new("Frame")
-    decorLayer.Name = "GoldCircleDecorations"
-    decorLayer.AnchorPoint = Vector2.new(0.5,0.5)
-    decorLayer.Position = UDim2.fromScale(0.5,0.39)
-    decorLayer.Size = UDim2.fromOffset(520,520)
-    decorLayer.BackgroundTransparency = 1
-    decorLayer.BorderSizePixel = 0
-    decorLayer.Parent = bg
-
-    local function addDecorCircle(size,thickness)
-        local circle = Instance.new("Frame")
-        circle.AnchorPoint = Vector2.new(0.5,0.5)
-        circle.Size = UDim2.fromOffset(size,size)
-        circle.BackgroundTransparency = 1
-        circle.BorderSizePixel = 0
-        circle.Parent = decorLayer
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(1,0)
-        corner.Parent = circle
-        local stroke = Instance.new("UIStroke")
-        stroke.Thickness = thickness or 2
-        stroke.Color = Color3.fromRGB(255,195,0)
-        stroke.Transparency = 0.12
-        stroke.Parent = circle
-        return circle
-    end
-
-    local circles = {}
-    local circleCount = 18
-    for i=1,circleCount do
-        local circle = addDecorCircle(12 + (i % 4) * 5, 2)
-        circles[i] = {
-            object=circle,
-            baseSize=12 + (i % 4) * 5,
-            angle=(i-1)*(360/circleCount) + (i%2)*8,
-            radius=115 + (i%5)*18,
-            speed=18 + (i%4)*5,
-            phase=(i%6)*0.35
-        }
-    end
-
-    task.spawn(function()
-        local t=0
-        while decorLayer and decorLayer.Parent do
-            t=t+0.035
-            for _,data in ipairs(circles) do
-                local obj=data.object
-                if obj and obj.Parent then
-                    local cycle=(t*data.speed/55 + data.phase)%1
-                    local radius=45 + cycle*215
-                    local angle=math.rad(data.angle + t*7)
-                    local x=260 + math.cos(angle)*radius
-                    local y=260 + math.sin(angle)*radius
-                    obj.Position=UDim2.fromOffset(x,y)
-                    local fade=0.05 + cycle*0.58
-                    local stroke=obj:FindFirstChildOfClass("UIStroke")
-                    if stroke then stroke.Transparency=math.clamp(fade,0.05,0.72) end
-                    local scale=0.75 + cycle*0.75
-                    obj.Size=UDim2.fromOffset(data.baseSize*scale,data.baseSize*scale)
-                end
-            end
-            task.wait(0.035)
-        end
-    end)
-
-    for _,ringData in ipairs({{size=410,thickness=2,trans=0.72},{size=500,thickness=2,trans=0.82}}) do
-        local ring=Instance.new("Frame")
-        ring.AnchorPoint=Vector2.new(0.5,0.5)
-        ring.Position=UDim2.fromOffset(260,260)
-        ring.Size=UDim2.fromOffset(ringData.size,ringData.size)
-        ring.BackgroundTransparency=1
-        ring.BorderSizePixel=0
-        ring.Parent=decorLayer
-        Instance.new("UICorner",ring).CornerRadius=UDim.new(1,0)
-        local stroke=Instance.new("UIStroke")
-        stroke.Thickness=ringData.thickness
-        stroke.Color=Color3.fromRGB(255,190,0)
-        stroke.Transparency=ringData.trans
-        stroke.Parent=ring
-    end
-
-    local imageBorder = Instance.new("Frame")
-    imageBorder.Name = "GoldSquareBorder"
-    imageBorder.AnchorPoint = Vector2.new(0.5,0.5)
-    imageBorder.Position = UDim2.fromScale(0.5,0.39)
-    imageBorder.Size = UDim2.fromOffset(232,232)
-    imageBorder.BackgroundColor3 = Color3.fromRGB(255,195,0)
-    imageBorder.BorderSizePixel = 0
-    imageBorder.Parent = bg
-
-    local icon = Instance.new("ImageLabel")
-    icon.Name = "CenterIcon"
-    icon.AnchorPoint = Vector2.new(0.5,0.5)
-    icon.Position = UDim2.fromScale(0.5,0.5)
-    icon.Size = UDim2.fromOffset(224,224)
-    icon.BackgroundColor3 = Color3.fromRGB(8,7,3)
-    icon.BackgroundTransparency = 0
-    icon.BorderSizePixel = 0
-    icon.Image = "rbxassetid://118156660240152"
-    icon.ImageTransparency = 1
-    icon.ScaleType = Enum.ScaleType.Fit
-    icon.Parent = imageBorder
-
-    local title = Instance.new("TextLabel")
-    title.AnchorPoint = Vector2.new(0.5,0)
-    title.Position = UDim2.fromScale(0.5,0.57)
-    title.Size = UDim2.fromOffset(700,68)
-    title.BackgroundTransparency = 1
-    title.Text = "正在加载 奶龙_HUB"
-    title.TextColor3 = Color3.fromRGB(255,220,100)
-    title.TextTransparency = 1
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 42
-    title.Parent = bg
-
-    local sub = Instance.new("TextLabel")
-    sub.AnchorPoint = Vector2.new(0.5,0)
-    sub.Position = UDim2.fromScale(0.5,0.65)
-    sub.Size = UDim2.fromOffset(700,42)
-    sub.BackgroundTransparency = 1
-    sub.Text = "正在初始化..."
-    sub.TextColor3 = Color3.fromRGB(235,220,175)
-    sub.TextTransparency = 1
-    sub.Font = Enum.Font.Gotham
-    sub.TextSize = 20
-    sub.Parent = bg
-
-    local barBack = Instance.new("Frame")
-    barBack.AnchorPoint = Vector2.new(0.5,0)
-    barBack.Position = UDim2.fromScale(0.5,0.74)
-    barBack.Size = UDim2.fromOffset(440,9)
-    barBack.BackgroundColor3 = Color3.fromRGB(65,52,20)
-    barBack.BackgroundTransparency = 1
-    barBack.BorderSizePixel = 0
-    barBack.Parent = bg
-    Instance.new("UICorner",barBack).CornerRadius = UDim.new(1,0)
-
-    local bar = Instance.new("Frame")
-    bar.Size = UDim2.fromScale(0.05,1)
-    bar.BackgroundColor3 = Color3.fromRGB(255,195,0)
-    bar.BackgroundTransparency = 1
-    bar.BorderSizePixel = 0
-    bar.Parent = barBack
-    Instance.new("UICorner",bar).CornerRadius = UDim.new(1,0)
-
-    local percent = Instance.new("TextLabel")
-    percent.AnchorPoint = Vector2.new(0.5,0)
-    percent.Position = UDim2.fromScale(0.5,0.775)
-    percent.Size = UDim2.fromOffset(200,34)
-    percent.BackgroundTransparency = 1
-    percent.Text = "5%"
-    percent.TextColor3 = Color3.fromRGB(255,210,70)
-    percent.TextTransparency = 1
-    percent.Font = Enum.Font.GothamBold
-    percent.TextSize = 16
-    percent.Parent = bg
-
-    local function tw(obj,time,props)
-        return TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props)
-    end
-
-    tw(icon,0.45,{ImageTransparency=0}):Play()
-    tw(title,0.45,{TextTransparency=0}):Play()
-    tw(sub,0.45,{TextTransparency=0}):Play()
-    tw(barBack,0.35,{BackgroundTransparency=0}):Play()
-    tw(bar,0.5,{Size=UDim2.fromScale(0.05,1),BackgroundTransparency=0}):Play()
-    tw(percent,0.35,{TextTransparency=0}):Play()
-
-    updateStartupProgress = function(value,text)
-        if not gui or not gui.Parent then return end
-        value = math.clamp(tonumber(value) or 0,0,100)
-        if text then sub.Text = text end
-        percent.Text = tostring(math.floor(value)).."%"
-        bar.Size = UDim2.fromScale(value/100,1)
-    end
-
-    finishStartup = function()
-        if not gui or not gui.Parent then return end
-        updateStartupProgress(100,"加载完成")
-        task.wait(0.35)
-        tw(bg,0.45,{BackgroundTransparency=1}):Play()
-        tw(icon,0.35,{ImageTransparency=1}):Play()
-        tw(title,0.35,{TextTransparency=1}):Play()
-        tw(sub,0.35,{TextTransparency=1}):Play()
-        tw(barBack,0.3,{BackgroundTransparency=1}):Play()
-        tw(percent,0.3,{TextTransparency=1}):Play()
-        task.wait(0.5)
-        if gui and gui.Parent then gui:Destroy() end
-    end
-end)
-
-pcall(function()
-    local startupSound = Instance.new("Sound")
-    startupSound.Name = "奶龙_HUB_StartupSound"
-    startupSound.SoundId = "rbxassetid://84267705669861"
-    startupSound.Volume = 5
-    startupSound.Looped = false
-    startupSound.Parent = game:GetService("SoundService")
-    startupSound:Play()
-    startupSound.Ended:Connect(function()
-        startupSound:Destroy()
-    end)
-end)
-
-if updateStartupProgress then
-    updateStartupProgress(10,"正在初始化...")
-end
+-- UI兼容排除测试第1版：暂时移除自定义启动动画和启动音效。
+-- WindUI主窗口、Tab、按钮、开关、滑条以及原有功能全部保留。
+local finishStartup = nil
+local updateStartupProgress = nil
 
 local function gradient(text,startColor,endColor)
     local result=""
@@ -322,54 +90,20 @@ if not B then
     return
 end
 
-pcall(function() B.Transparency=0.3 end)
 
-pcall(function()
-    B:AddTheme({
-        Name = "奶龙_Gold",
-        Accent = Color3.fromRGB(255, 190, 0),
-        Background = Color3.fromRGB(24, 20, 8),
-        Outline = Color3.fromRGB(255, 200, 0),
-        Text = Color3.fromRGB(255, 225, 130),
-        Placeholder = Color3.fromRGB(190, 160, 80),
-        Button = Color3.fromRGB(90, 65, 10),
-        Icon = Color3.fromRGB(255, 200, 0),
-    })
-    B:SetTheme("奶龙_Gold")
-end)
-
+-- 已移除自定义主题，使用 WindUI 默认主题以确保兼容。
 
 if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
 
 local C
 local windowOk, windowResult = pcall(function()
     return B:CreateWindow({
-        Icon = "crown",
         Title = "奶龙_HUB",
         Author = "@墨水依旧 司空",
+        Icon = "moon",
         Folder = "奶龙_HUB",
-        Size = UDim2.fromOffset(520,410),
-        Background = "rbxassetid://118156660240152",
-        BackgroundImageTransparency = 0.25,
-        Theme = "奶龙_Gold",
-        User = {Enabled=false},
-        SideBarWidth = 160,
-        ScrollBarEnabled = true,
         NewElements = true,
-
-        -- 按当前 WindUI 官方窗口配置直接创建悬浮打开按钮
-        OpenButton = {
-            Title = "奶龙_HUB",
-            Icon = "crown",
-            StrokeThickness = 2,
-            Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0,Color3.fromRGB(255,235,120)),
-                ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,190,0)),
-                ColorSequenceKeypoint.new(1,Color3.fromRGB(255,140,0))
-            }),
-            Draggable = true,
-            Enabled = true,
-        },
+        HideSearchBar = false,
     })
 end)
 
@@ -388,48 +122,22 @@ end
 
 C = windowResult
 
-local windowFrame=C and (C.UIElements and C.UIElements.Main or C.Frame or C.Gui or C)
-if windowFrame then
-    local stroke=Instance.new("UIStroke")
-    stroke.Name="GoldStroke"
-    stroke.Thickness=2
-    stroke.Color=Color3.fromRGB(255,190,0)
-    stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-    stroke.Parent=windowFrame
-
-    local strokeGradient=Instance.new("UIGradient")
-    strokeGradient.Name="DynamicGoldGradient"
-    strokeGradient.Color=ColorSequence.new({
-        ColorSequenceKeypoint.new(0,Color3.fromRGB(255,170,0)),
-        ColorSequenceKeypoint.new(0.25,Color3.fromRGB(255,220,80)),
-        ColorSequenceKeypoint.new(0.5,Color3.fromRGB(255,245,160)),
-        ColorSequenceKeypoint.new(0.75,Color3.fromRGB(255,200,20)),
-        ColorSequenceKeypoint.new(1,Color3.fromRGB(255,170,0))
+-- 恢复最小化按钮：仅将边框改为灰色风格，其余保持第一版不变。
+pcall(function()
+    C:EditOpenButton({
+        Title = "奶龙_HUB",
+        Icon = "crown",
+        StrokeThickness = 2,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 90, 90)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 70, 70))
+        }),
+        Draggable = true
     })
-    strokeGradient.Rotation=0
-    strokeGradient.Parent=stroke
+end)
 
-    task.spawn(function()
-        while stroke and stroke.Parent do
-            for rotation=0,360,2 do
-                if not stroke or not stroke.Parent or not strokeGradient or not strokeGradient.Parent then
-                    break
-                end
-                strokeGradient.Rotation=rotation
-                task.wait(0.015)
-            end
-        end
-    end)
-    task.spawn(function()
-        local rotationSpeed=40
-        while stroke and stroke.Parent do
-            task.wait(0.01)
-            strokeGradient.Rotation=(strokeGradient.Rotation+rotationSpeed*0.1)%360
-        end
-    end)
-end
-
-local D=C:Section({Title="功能菜单",Opened=true})
+local D=C -- 兼容模式：直接在 Window 上创建 Tab，绕过 Section 容器兼容问题
 
 
 
