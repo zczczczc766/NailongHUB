@@ -155,6 +155,178 @@ pcall(function()
     })
 end)
 
+-- 主UI使用与最小化按钮相同的灰色渐变边框。
+pcall(function()
+    local CoreGui = game:GetService("CoreGui")
+    local targetWindow = nil
+
+    -- 通过主标题定位 WindUI 主窗口，避免依赖 WindUI 内部固定对象名称。
+    for _, obj in ipairs(CoreGui:GetDescendants()) do
+        if obj:IsA("TextLabel") and obj.Text == "奶龙_HUB" then
+            local parent = obj.Parent
+            for _ = 1, 8 do
+                if not parent then break end
+                if parent:IsA("Frame") then
+                    local size = parent.AbsoluteSize
+                    if size.X > 300 and size.Y > 150 then
+                        targetWindow = parent
+                        break
+                    end
+                end
+                parent = parent.Parent
+            end
+            if targetWindow then break end
+        end
+    end
+
+    if targetWindow then
+        local oldStroke = targetWindow:FindFirstChild("NailongGrayMainBorder")
+        if oldStroke then oldStroke:Destroy() end
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "NailongGrayMainBorder"
+        stroke.Thickness = 2
+        stroke.Transparency = 0
+        stroke.Color = Color3.fromRGB(120, 120, 120)
+        stroke.Parent = targetWindow
+
+        local gradient = Instance.new("UIGradient")
+        gradient.Rotation = 0
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 90, 90)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 70, 70))
+        })
+        gradient.Parent = stroke
+    end
+end)
+
+-- 主UI边框动态效果：沿用 XION 的渐变边框思路，只把颜色改成灰色。
+pcall(function()
+    local CoreGui = game:GetService("CoreGui")
+    local RunService = game:GetService("RunService")
+    local targetWindow
+    for _, obj in ipairs(CoreGui:GetDescendants()) do
+        if obj:IsA("TextLabel") and obj.Text == "奶龙_HUB" then
+            local parent = obj.Parent
+            for _ = 1, 8 do
+                if not parent then break end
+                if parent:IsA("Frame") then
+                    local size = parent.AbsoluteSize
+                    if size.X > 300 and size.Y > 150 then targetWindow = parent break end
+                end
+                parent = parent.Parent
+            end
+            if targetWindow then break end
+        end
+    end
+    if targetWindow then
+        local stroke = targetWindow:FindFirstChild("NailongGrayMainBorder")
+        if stroke and stroke:IsA("UIStroke") then
+            local grad = stroke:FindFirstChild("NailongGrayBorderGradient")
+            if not grad then
+                grad = Instance.new("UIGradient")
+                grad.Name = "NailongGrayBorderGradient"
+                grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,70)),
+                    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,120,120)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180,180,180)),
+                    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120,120,120)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(70,70,70))
+                })
+                grad.Parent = stroke
+            end
+            task.spawn(function()
+                local rotation = 0
+                while targetWindow and targetWindow.Parent and stroke.Parent do
+                    rotation = (rotation + 1.2) % 360
+                    grad.Rotation = rotation
+                    RunService.RenderStepped:Wait()
+                end
+            end)
+        end
+    end
+end)
+
+-- 左下角信息检测：参考 XION 的信息显示思路，改成奶龙_HUB 灰色风格。
+pcall(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local CoreGui = game:GetService("CoreGui")
+    local LocalPlayer = Players.LocalPlayer
+    local oldGui = CoreGui:FindFirstChild("NailongGrayInfo")
+    if oldGui then oldGui:Destroy() end
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "NailongGrayInfo"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 999
+    gui.Parent = CoreGui
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.fromOffset(190,72)
+    frame.Position = UDim2.new(0,12,1,-84)
+    frame.BackgroundColor3 = Color3.fromRGB(24,24,24)
+    frame.BackgroundTransparency = 0.12
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,10)
+    corner.Parent = frame
+    local stroke = Instance.new("UIStroke")
+    stroke.Name = "InfoBorder"
+    stroke.Thickness = 2
+    stroke.Parent = frame
+    local grad = Instance.new("UIGradient")
+    grad.Name = "InfoBorderGradient"
+    grad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,70)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(170,170,170)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(70,70,70))
+    })
+    grad.Parent = stroke
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1,-18,0,22)
+    title.Position = UDim2.fromOffset(9,5)
+    title.BackgroundTransparency = 1
+    title.Text = "信息检测"
+    title.TextColor3 = Color3.fromRGB(175,175,175)
+    title.TextSize = 14
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = frame
+    local info = Instance.new("TextLabel")
+    info.Size = UDim2.new(1,-18,0,38)
+    info.Position = UDim2.fromOffset(9,28)
+    info.BackgroundTransparency = 1
+    info.TextColor3 = Color3.fromRGB(145,145,145)
+    info.TextSize = 13
+    info.Font = Enum.Font.Gotham
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.TextYAlignment = Enum.TextYAlignment.Top
+    info.Text = "FPS: --   Ping: -- ms"
+    info.Parent = frame
+    local frames, lastTime = 0, tick()
+    RunService.RenderStepped:Connect(function()
+        frames = frames + 1
+        local now = tick()
+        if now-lastTime >= 1 then
+            local fps = frames
+            frames, lastTime = 0, now
+            local ping = 0
+            pcall(function() ping = math.floor(LocalPlayer:GetNetworkPing()*1000+0.5) end)
+            info.Text = string.format("FPS: %d   Ping: %d ms", fps, ping)
+        end
+    end)
+    task.spawn(function()
+        local rotation = 0
+        while gui.Parent and stroke.Parent do
+            rotation = (rotation + 1.5) % 360
+            grad.Rotation = rotation
+            RunService.RenderStepped:Wait()
+        end
+    end)
+end)
+
 local D=C -- 兼容模式：直接在 Window 上创建 Tab，绕过 Section 容器兼容问题
 
 
