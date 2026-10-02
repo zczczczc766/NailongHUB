@@ -271,60 +271,6 @@ Z:Paragraph({
     Image = "rbxassetid://84411268070942",
     ImageSize = 100,
 })
--- 【新功能】将信息检测移到公告栏
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
--- 使用 rbxthumb 协议直接获取头像URL
-local avatarUrl = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", LocalPlayer.UserId)
-
--- 创建信息面板段落
-local infoParagraph = Z:Paragraph({
-    Title = "个人信息检测",
-    Desc = string.format(
-        "显示名: %s\n用户名: @%s\nUserId: %d\nFPS: 计算中...\nPing: 计算中...",
-        LocalPlayer.DisplayName,
-        LocalPlayer.Name,
-        LocalPlayer.UserId
-    ),
-    Image = avatarUrl, -- 在这里显示头像
-    ImageSize = 64,
-})
-
--- 实时更新 FPS 和 Ping
-local frames = 0
-local lastTime = tick()
-
-task.spawn(function()
-    while true do
-        RunService.RenderStepped:Wait()
-        frames = frames + 1
-        local now = tick()
-        if now - lastTime >= 1 then
-            local fps = frames
-            frames = 0
-            lastTime = now
-            
-            local ping = 0
-            pcall(function()
-                ping = math.floor(LocalPlayer:GetNetworkPing() * 1000 + 0.5)
-            end)
-            
-            -- 更新文本
-            pcall(function()
-                infoParagraph:SetDesc(string.format(
-                    "显示名: %s\n用户名: @%s\nUserId: %d\nFPS: %d\nPing: %d ms",
-                    LocalPlayer.DisplayName,
-                    LocalPlayer.Name,
-                    LocalPlayer.UserId,
-                    fps,
-                    ping
-                ))
-            end)
-        end
-    end
-end)
 Z:Button({Title="复制作者QQ", Callback=function() setclipboard("2047955671") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ：2047955671", Duration=2}) end})
 Z:Button({Title="复制作者QQ群", Callback=function() setclipboard("1101093219") A:SetCore("SendNotification",{Title="已复制", Text="作者QQ群：1101093219", Duration=2}) end})
 Z:Button({Title="复制作者副群", Callback=function() setclipboard("1063828524") A:SetCore("SendNotification",{Title="已复制", Text="作者副群：1063828524", Duration=2}) end})
