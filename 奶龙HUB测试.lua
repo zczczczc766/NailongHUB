@@ -143,7 +143,7 @@ pcall(function()
     C:EditOpenButton({
         Title = "奶龙_HUB",
         Icon = "crown",
-        StrokeThickness = 5,
+        StrokeThickness = 7,
         TextColor = Color3.fromRGB(150, 150, 150),
         TitleColor = Color3.fromRGB(150, 150, 150),
         Color = ColorSequence.new({
@@ -180,7 +180,7 @@ pcall(function()
 
         local stroke = Instance.new("UIStroke")
         stroke.Name = "NailongGrayMainBorder"
-        stroke.Thickness = 5
+        stroke.Thickness = 8
         stroke.Transparency = 0
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         stroke.Color = Color3.fromRGB(145,145,145)
@@ -260,79 +260,128 @@ pcall(function()
     task.delay(0.8, function() pcall(function() recolor(CoreGui) end) end)
 end)
 
--- 左下角信息检测：参考 XION 的信息显示思路，改成奶龙_HUB 灰色风格。
+-- 左下角玩家信息检测：按 XION 风格做成独立信息卡，使用灰色主题。
 pcall(function()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
     local CoreGui = game:GetService("CoreGui")
     local LocalPlayer = Players.LocalPlayer
-    local oldGui = CoreGui:FindFirstChild("NailongGrayInfo")
+
+    local oldGui = CoreGui:FindFirstChild("NailongPlayerInfo")
     if oldGui then oldGui:Destroy() end
+
     local gui = Instance.new("ScreenGui")
-    gui.Name = "NailongGrayInfo"
+    gui.Name = "NailongPlayerInfo"
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
     gui.DisplayOrder = 999
     gui.Parent = CoreGui
+
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.fromOffset(190,72)
-    frame.Position = UDim2.new(0,12,1,-84)
-    frame.BackgroundColor3 = Color3.fromRGB(24,24,24)
-    frame.BackgroundTransparency = 0.12
+    frame.Name = "PlayerInfoPanel"
+    frame.Size = UDim2.fromOffset(245, 132)
+    frame.Position = UDim2.new(0, 12, 1, -144)
+    frame.BackgroundColor3 = Color3.fromRGB(22,22,22)
+    frame.BackgroundTransparency = 0.08
     frame.BorderSizePixel = 0
     frame.Parent = gui
+
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,10)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = frame
+
+    -- 主边框
     local stroke = Instance.new("UIStroke")
-    stroke.Name = "InfoBorder"
-    stroke.Thickness = 2
+    stroke.Name = "PlayerInfoBorder"
+    stroke.Thickness = 3
+    stroke.Transparency = 0
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = frame
+
     local grad = Instance.new("UIGradient")
-    grad.Name = "InfoBorderGradient"
+    grad.Name = "PlayerInfoBorderGradient"
     grad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,70)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(170,170,170)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(70,70,70))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(55,55,55)),
+        ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,120,120)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(205,205,205)),
+        ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120,120,120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(55,55,55))
     })
     grad.Parent = stroke
+
+    -- 灰色外发光
+    for _, data in ipairs({
+        {"PlayerInfoGlowOuter", 14, 0.90},
+        {"PlayerInfoGlowMid", 9, 0.82}
+    }) do
+        local glow = Instance.new("UIStroke")
+        glow.Name = data[1]
+        glow.Thickness = data[2]
+        glow.Transparency = data[3]
+        glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        glow.Color = Color3.fromRGB(150,150,150)
+        glow.Parent = frame
+    end
+
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,-18,0,22)
-    title.Position = UDim2.fromOffset(9,5)
+    title.Size = UDim2.new(1,-20,0,22)
+    title.Position = UDim2.fromOffset(10,6)
     title.BackgroundTransparency = 1
-    title.Text = "信息检测"
-    title.TextColor3 = Color3.fromRGB(175,175,175)
+    title.Text = "玩家信息检测"
+    title.TextColor3 = Color3.fromRGB(190,190,190)
     title.TextSize = 14
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = frame
+
     local info = Instance.new("TextLabel")
-    info.Size = UDim2.new(1,-18,0,38)
-    info.Position = UDim2.fromOffset(9,28)
+    info.Size = UDim2.new(1,-20,1,-34)
+    info.Position = UDim2.fromOffset(10,31)
     info.BackgroundTransparency = 1
-    info.TextColor3 = Color3.fromRGB(145,145,145)
-    info.TextSize = 13
+    info.TextColor3 = Color3.fromRGB(155,155,155)
+    info.TextSize = 12
     info.Font = Enum.Font.Gotham
     info.TextXAlignment = Enum.TextXAlignment.Left
     info.TextYAlignment = Enum.TextYAlignment.Top
-    info.Text = "FPS: --   Ping: -- ms"
+    info.TextWrapped = false
     info.Parent = frame
-    local frames, lastTime = 0, tick()
+
+    local frames = 0
+    local lastTime = tick()
+    local fps = 0
+
+    local function updateInfo()
+        local ping = 0
+        pcall(function()
+            ping = math.floor(LocalPlayer:GetNetworkPing() * 1000 + 0.5)
+        end)
+        info.Text = string.format(
+            "玩家: %s\n用户名: @%s\nUserId: %s\nFPS: %d    Ping: %d ms",
+            tostring(LocalPlayer.DisplayName),
+            tostring(LocalPlayer.Name),
+            tostring(LocalPlayer.UserId),
+            fps,
+            ping
+        )
+    end
+
+    updateInfo()
+
     RunService.RenderStepped:Connect(function()
         frames = frames + 1
         local now = tick()
-        if now-lastTime >= 1 then
-            local fps = frames
-            frames, lastTime = 0, now
-            local ping = 0
-            pcall(function() ping = math.floor(LocalPlayer:GetNetworkPing()*1000+0.5) end)
-            info.Text = string.format("FPS: %d   Ping: %d ms", fps, ping)
+        if now - lastTime >= 1 then
+            fps = frames
+            frames = 0
+            lastTime = now
+            updateInfo()
         end
     end)
+
     task.spawn(function()
         local rotation = 0
-        while gui.Parent and stroke.Parent do
-            rotation = (rotation + 1.5) % 360
+        while gui.Parent and stroke.Parent and grad.Parent do
+            rotation = (rotation + 1.2) % 360
             grad.Rotation = rotation
             RunService.RenderStepped:Wait()
         end
