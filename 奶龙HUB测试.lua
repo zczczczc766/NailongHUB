@@ -113,8 +113,8 @@ if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") 
 local C
 local windowOk, windowResult = pcall(function()
     return B:CreateWindow({
-        Title = "奶龙_HUB",
-        Author = "@墨水依旧 司空",
+        Title = gradient("奶龙_HUB",Color3.fromRGB(180,180,180),Color3.fromRGB(100,100,100)),
+        Author = gradient("@墨水依旧 司空",Color3.fromRGB(180,180,180),Color3.fromRGB(100,100,100)),
         Icon = "moon",
         Folder = "奶龙_HUB",
         NewElements = true,
