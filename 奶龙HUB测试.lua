@@ -273,8 +273,8 @@ pcall(function()
 
     local card = Instance.new("Frame")
     card.Name = "NailongPlayerInfoCard"
-    card.Size = UDim2.fromOffset(270, 82)
-    card.Position = UDim2.new(0, 12, 1, -94)
+    card.Size = UDim2.new(0.52, 0, 0, 72)
+    card.Position = UDim2.new(0, 10, 1, -82)
     card.BackgroundColor3 = Color3.fromRGB(24,24,24)
     card.BackgroundTransparency = 0.08
     card.BorderSizePixel = 0
@@ -314,8 +314,8 @@ pcall(function()
 
     local avatar = Instance.new("ImageLabel")
     avatar.Name = "Avatar"
-    avatar.Size = UDim2.fromOffset(58,58)
-    avatar.Position = UDim2.fromOffset(10,12)
+    avatar.Size = UDim2.fromOffset(48,48)
+    avatar.Position = UDim2.fromOffset(8,12)
     avatar.BackgroundColor3 = Color3.fromRGB(45,45,45)
     avatar.BackgroundTransparency = 0
     avatar.BorderSizePixel = 0
@@ -342,12 +342,12 @@ pcall(function()
 
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Name = "DisplayName"
-    nameLabel.Size = UDim2.new(1,-82,0,22)
-    nameLabel.Position = UDim2.fromOffset(78,8)
+    nameLabel.Size = UDim2.new(1,-66,0,19)
+    nameLabel.Position = UDim2.fromOffset(64,7)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = tostring(LocalPlayer.DisplayName)
     nameLabel.TextColor3 = Color3.fromRGB(220,220,220)
-    nameLabel.TextSize = 15
+    nameLabel.TextSize = 13
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextXAlignment = Enum.TextXAlignment.Left
     nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -356,12 +356,12 @@ pcall(function()
 
     local userLabel = Instance.new("TextLabel")
     userLabel.Name = "Username"
-    userLabel.Size = UDim2.new(1,-82,0,18)
-    userLabel.Position = UDim2.fromOffset(78,30)
+    userLabel.Size = UDim2.new(1,-66,0,16)
+    userLabel.Position = UDim2.fromOffset(64,26)
     userLabel.BackgroundTransparency = 1
     userLabel.Text = "@" .. tostring(LocalPlayer.Name)
     userLabel.TextColor3 = Color3.fromRGB(145,145,145)
-    userLabel.TextSize = 11
+    userLabel.TextSize = 10
     userLabel.Font = Enum.Font.Gotham
     userLabel.TextXAlignment = Enum.TextXAlignment.Left
     userLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -370,11 +370,11 @@ pcall(function()
 
     local statsLabel = Instance.new("TextLabel")
     statsLabel.Name = "Stats"
-    statsLabel.Size = UDim2.new(1,-82,0,20)
-    statsLabel.Position = UDim2.fromOffset(78,50)
+    statsLabel.Size = UDim2.new(1,-66,0,17)
+    statsLabel.Position = UDim2.fromOffset(64,45)
     statsLabel.BackgroundTransparency = 1
     statsLabel.TextColor3 = Color3.fromRGB(170,170,170)
-    statsLabel.TextSize = 10
+    statsLabel.TextSize = 9
     statsLabel.Font = Enum.Font.Gotham
     statsLabel.TextXAlignment = Enum.TextXAlignment.Left
     statsLabel.TextTruncate = Enum.TextTruncate.AtEnd
