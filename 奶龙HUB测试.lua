@@ -91,7 +91,20 @@ if not B then
 end
 
 
--- 已移除自定义主题，使用 WindUI 默认主题以确保兼容。
+-- 全局灰色主题：主窗口、控件、文字/图标与边框统一为灰色风格。
+-- 使用 WindUI 1.6.66 支持的 AddTheme + CreateWindow Theme 参数。
+pcall(function()
+    B:AddTheme({
+        Name = "NailongGrey",
+        Accent = Color3.fromRGB(125, 125, 125),
+        Background = Color3.fromRGB(24, 24, 24),
+        Outline = Color3.fromRGB(105, 105, 105),
+        Text = Color3.fromRGB(235, 235, 235),
+        Placeholder = Color3.fromRGB(130, 130, 130),
+        Button = Color3.fromRGB(55, 55, 55),
+        Icon = Color3.fromRGB(190, 190, 190),
+    })
+end)
 
 if updateStartupProgress then updateStartupProgress(82,"正在创建界面...") end
 
@@ -104,6 +117,7 @@ local windowOk, windowResult = pcall(function()
         Folder = "奶龙_HUB",
         NewElements = true,
         HideSearchBar = false,
+        Theme = "NailongGrey",
     })
 end)
 
