@@ -143,7 +143,7 @@ pcall(function()
     C:EditOpenButton({
         Title = "奶龙_HUB",
         Icon = "crown",
-        StrokeThickness = 4,
+        StrokeThickness = 5,
         TextColor = Color3.fromRGB(150, 150, 150),
         TitleColor = Color3.fromRGB(150, 150, 150),
         Color = ColorSequence.new({
@@ -180,11 +180,44 @@ pcall(function()
 
         local stroke = Instance.new("UIStroke")
         stroke.Name = "NailongGrayMainBorder"
-        stroke.Thickness = 3
+        stroke.Thickness = 5
         stroke.Transparency = 0
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         stroke.Color = Color3.fromRGB(145,145,145)
         stroke.Parent = targetWindow
+
+        -- 灰色背景发光：用多层半透明 UIStroke 做柔和外发光，不改变原功能。
+        local glowColors = {
+            {Name = "NailongGrayGlowOuter", Thickness = 16, Transparency = 0.88},
+            {Name = "NailongGrayGlowMid", Thickness = 11, Transparency = 0.80},
+            {Name = "NailongGrayGlowInner", Thickness = 7, Transparency = 0.70},
+        }
+        for _, info in ipairs(glowColors) do
+            local oldGlow = targetWindow:FindFirstChild(info.Name)
+            if oldGlow then oldGlow:Destroy() end
+            local glow = Instance.new("UIStroke")
+            glow.Name = info.Name
+            glow.Thickness = info.Thickness
+            glow.Transparency = info.Transparency
+            glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            glow.Color = Color3.fromRGB(150,150,150)
+            glow.Parent = targetWindow
+            local glowGradient = Instance.new("UIGradient")
+            glowGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,70)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(190,190,190)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(70,70,70))
+            })
+            glowGradient.Parent = glow
+            task.spawn(function()
+                local r = 0
+                while targetWindow.Parent and glow.Parent and glowGradient.Parent do
+                    r = (r + 1.1) % 360
+                    glowGradient.Rotation = r
+                    RunService.RenderStepped:Wait()
+                end
+            end)
+        end
 
         local gradient = Instance.new("UIGradient")
         gradient.Name = "NailongGrayBorderGradient"
