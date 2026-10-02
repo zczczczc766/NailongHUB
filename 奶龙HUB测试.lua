@@ -143,7 +143,7 @@ pcall(function()
     C:EditOpenButton({
         Title = "奶龙_HUB",
         Icon = "crown",
-        StrokeThickness = 7,
+        StrokeThickness = 5,
         TextColor = Color3.fromRGB(150, 150, 150),
         TitleColor = Color3.fromRGB(150, 150, 150),
         Color = ColorSequence.new({
@@ -180,7 +180,7 @@ pcall(function()
 
         local stroke = Instance.new("UIStroke")
         stroke.Name = "NailongGrayMainBorder"
-        stroke.Thickness = 8
+        stroke.Thickness = 7
         stroke.Transparency = 0
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         stroke.Color = Color3.fromRGB(145,145,145)
@@ -260,112 +260,139 @@ pcall(function()
     task.delay(0.8, function() pcall(function() recolor(CoreGui) end) end)
 end)
 
--- 左下角玩家信息检测：按 XION 风格做成独立信息卡，使用灰色主题。
+-- 主UI内部玩家信息卡：头像 + 显示名称 + 用户名 + UserId + FPS/Ping。
 pcall(function()
     local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
-    local CoreGui = game:GetService("CoreGui")
     local LocalPlayer = Players.LocalPlayer
+    local targetWindow = C.UIElements and C.UIElements.Main
+    if not targetWindow then return end
 
-    local oldGui = CoreGui:FindFirstChild("NailongPlayerInfo")
-    if oldGui then oldGui:Destroy() end
+    local oldCard = targetWindow:FindFirstChild("NailongPlayerInfoCard")
+    if oldCard then oldCard:Destroy() end
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "NailongPlayerInfo"
-    gui.ResetOnSpawn = false
-    gui.IgnoreGuiInset = true
-    gui.DisplayOrder = 999
-    gui.Parent = CoreGui
-
-    local frame = Instance.new("Frame")
-    frame.Name = "PlayerInfoPanel"
-    frame.Size = UDim2.fromOffset(245, 132)
-    frame.Position = UDim2.new(0, 12, 1, -144)
-    frame.BackgroundColor3 = Color3.fromRGB(22,22,22)
-    frame.BackgroundTransparency = 0.08
-    frame.BorderSizePixel = 0
-    frame.Parent = gui
+    local card = Instance.new("Frame")
+    card.Name = "NailongPlayerInfoCard"
+    card.Size = UDim2.fromOffset(270, 82)
+    card.Position = UDim2.new(0, 12, 1, -94)
+    card.BackgroundColor3 = Color3.fromRGB(24,24,24)
+    card.BackgroundTransparency = 0.08
+    card.BorderSizePixel = 0
+    card.ZIndex = 20
+    card.Parent = targetWindow
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = frame
+    corner.Parent = card
 
-    -- 主边框
     local stroke = Instance.new("UIStroke")
     stroke.Name = "PlayerInfoBorder"
-    stroke.Thickness = 3
+    stroke.Thickness = 2
     stroke.Transparency = 0
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Parent = frame
+    stroke.Color = Color3.fromRGB(145,145,145)
+    stroke.Parent = card
 
-    local grad = Instance.new("UIGradient")
-    grad.Name = "PlayerInfoBorderGradient"
-    grad.Color = ColorSequence.new({
+    local gradient = Instance.new("UIGradient")
+    gradient.Name = "PlayerInfoBorderGradient"
+    gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(55,55,55)),
         ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,120,120)),
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(205,205,205)),
         ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120,120,120)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(55,55,55))
     })
-    grad.Parent = stroke
+    gradient.Parent = stroke
 
-    -- 灰色外发光
-    for _, data in ipairs({
-        {"PlayerInfoGlowOuter", 14, 0.90},
-        {"PlayerInfoGlowMid", 9, 0.82}
-    }) do
-        local glow = Instance.new("UIStroke")
-        glow.Name = data[1]
-        glow.Thickness = data[2]
-        glow.Transparency = data[3]
-        glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        glow.Color = Color3.fromRGB(150,150,150)
-        glow.Parent = frame
-    end
+    local glow = Instance.new("UIStroke")
+    glow.Name = "PlayerInfoGlow"
+    glow.Thickness = 8
+    glow.Transparency = 0.82
+    glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    glow.Color = Color3.fromRGB(150,150,150)
+    glow.Parent = card
 
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,-20,0,22)
-    title.Position = UDim2.fromOffset(10,6)
-    title.BackgroundTransparency = 1
-    title.Text = "玩家信息检测"
-    title.TextColor3 = Color3.fromRGB(190,190,190)
-    title.TextSize = 14
-    title.Font = Enum.Font.GothamBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Parent = frame
+    local avatar = Instance.new("ImageLabel")
+    avatar.Name = "Avatar"
+    avatar.Size = UDim2.fromOffset(58,58)
+    avatar.Position = UDim2.fromOffset(10,12)
+    avatar.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    avatar.BackgroundTransparency = 0
+    avatar.BorderSizePixel = 0
+    avatar.ZIndex = 21
+    avatar.Parent = card
 
-    local info = Instance.new("TextLabel")
-    info.Size = UDim2.new(1,-20,1,-34)
-    info.Position = UDim2.fromOffset(10,31)
-    info.BackgroundTransparency = 1
-    info.TextColor3 = Color3.fromRGB(155,155,155)
-    info.TextSize = 12
-    info.Font = Enum.Font.Gotham
-    info.TextXAlignment = Enum.TextXAlignment.Left
-    info.TextYAlignment = Enum.TextYAlignment.Top
-    info.TextWrapped = false
-    info.Parent = frame
+    local avatarCorner = Instance.new("UICorner")
+    avatarCorner.CornerRadius = UDim.new(1,0)
+    avatarCorner.Parent = avatar
+
+    local avatarStroke = Instance.new("UIStroke")
+    avatarStroke.Thickness = 2
+    avatarStroke.Color = Color3.fromRGB(145,145,145)
+    avatarStroke.Parent = avatar
+
+    pcall(function()
+        local content, ready = Players:GetUserThumbnailAsync(
+            LocalPlayer.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size100x100
+        )
+        if content then avatar.Image = content end
+    end)
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "DisplayName"
+    nameLabel.Size = UDim2.new(1,-82,0,22)
+    nameLabel.Position = UDim2.fromOffset(78,8)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = tostring(LocalPlayer.DisplayName)
+    nameLabel.TextColor3 = Color3.fromRGB(220,220,220)
+    nameLabel.TextSize = 15
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    nameLabel.ZIndex = 21
+    nameLabel.Parent = card
+
+    local userLabel = Instance.new("TextLabel")
+    userLabel.Name = "Username"
+    userLabel.Size = UDim2.new(1,-82,0,18)
+    userLabel.Position = UDim2.fromOffset(78,30)
+    userLabel.BackgroundTransparency = 1
+    userLabel.Text = "@" .. tostring(LocalPlayer.Name)
+    userLabel.TextColor3 = Color3.fromRGB(145,145,145)
+    userLabel.TextSize = 11
+    userLabel.Font = Enum.Font.Gotham
+    userLabel.TextXAlignment = Enum.TextXAlignment.Left
+    userLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    userLabel.ZIndex = 21
+    userLabel.Parent = card
+
+    local statsLabel = Instance.new("TextLabel")
+    statsLabel.Name = "Stats"
+    statsLabel.Size = UDim2.new(1,-82,0,20)
+    statsLabel.Position = UDim2.fromOffset(78,50)
+    statsLabel.BackgroundTransparency = 1
+    statsLabel.TextColor3 = Color3.fromRGB(170,170,170)
+    statsLabel.TextSize = 10
+    statsLabel.Font = Enum.Font.Gotham
+    statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    statsLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    statsLabel.ZIndex = 21
+    statsLabel.Parent = card
 
     local frames = 0
     local lastTime = tick()
     local fps = 0
 
-    local function updateInfo()
+    local function updateStats()
         local ping = 0
         pcall(function()
             ping = math.floor(LocalPlayer:GetNetworkPing() * 1000 + 0.5)
         end)
-        info.Text = string.format(
-            "玩家: %s\n用户名: @%s\nUserId: %s\nFPS: %d    Ping: %d ms",
-            tostring(LocalPlayer.DisplayName),
-            tostring(LocalPlayer.Name),
-            tostring(LocalPlayer.UserId),
-            fps,
-            ping
-        )
+        statsLabel.Text = string.format("UserId: %s   FPS: %d   Ping: %d ms", tostring(LocalPlayer.UserId), fps, ping)
     end
-
-    updateInfo()
+    updateStats()
 
     RunService.RenderStepped:Connect(function()
         frames = frames + 1
@@ -374,15 +401,15 @@ pcall(function()
             fps = frames
             frames = 0
             lastTime = now
-            updateInfo()
+            updateStats()
         end
     end)
 
     task.spawn(function()
         local rotation = 0
-        while gui.Parent and stroke.Parent and grad.Parent do
+        while targetWindow.Parent and card.Parent and gradient.Parent do
             rotation = (rotation + 1.2) % 360
-            grad.Rotation = rotation
+            gradient.Rotation = rotation
             RunService.RenderStepped:Wait()
         end
     end)
