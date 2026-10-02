@@ -143,7 +143,7 @@ pcall(function()
     C:EditOpenButton({
         Title = "奶龙_HUB",
         Icon = "crown",
-        StrokeThickness = 2,
+        StrokeThickness = 4,
         TextColor = Color3.fromRGB(150, 150, 150),
         TitleColor = Color3.fromRGB(150, 150, 150),
         Color = ColorSequence.new({
@@ -155,27 +155,22 @@ pcall(function()
     })
 end)
 
--- 主UI使用与最小化按钮相同的灰色渐变边框。
+-- 主UI边框：直接使用 WindUI 的 Main 容器，避免通过标题查找导致边框没有加上。
 pcall(function()
-    local CoreGui = game:GetService("CoreGui")
-    local targetWindow = nil
+    local RunService = game:GetService("RunService")
+    local targetWindow = C.UIElements and C.UIElements.Main
 
-    -- 通过主标题定位 WindUI 主窗口，避免依赖 WindUI 内部固定对象名称。
-    for _, obj in ipairs(CoreGui:GetDescendants()) do
-        if obj:IsA("TextLabel") and obj.Text == "奶龙_HUB" then
-            local parent = obj.Parent
-            for _ = 1, 8 do
-                if not parent then break end
-                if parent:IsA("Frame") then
-                    local size = parent.AbsoluteSize
-                    if size.X > 300 and size.Y > 150 then
-                        targetWindow = parent
-                        break
-                    end
+    if not targetWindow then
+        -- 兼容部分 WindUI 版本：延迟到 CoreGui 创建完成后再找窗口。
+        local CoreGui = game:GetService("CoreGui")
+        for _, obj in ipairs(CoreGui:GetDescendants()) do
+            if obj:IsA("Frame") and obj.AbsoluteSize.X > 300 and obj.AbsoluteSize.Y > 150 then
+                local title = obj:FindFirstChildWhichIsA("TextLabel", true)
+                if title and title.Text == "奶龙_HUB" then
+                    targetWindow = obj
+                    break
                 end
-                parent = parent.Parent
             end
-            if targetWindow then break end
         end
     end
 
@@ -185,67 +180,51 @@ pcall(function()
 
         local stroke = Instance.new("UIStroke")
         stroke.Name = "NailongGrayMainBorder"
-        stroke.Thickness = 2
+        stroke.Thickness = 3
         stroke.Transparency = 0
-        stroke.Color = Color3.fromRGB(120, 120, 120)
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = Color3.fromRGB(145,145,145)
         stroke.Parent = targetWindow
 
         local gradient = Instance.new("UIGradient")
-        gradient.Rotation = 0
+        gradient.Name = "NailongGrayBorderGradient"
         gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 90, 90)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 70, 70))
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(65,65,65)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,120,120)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200,200,200)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120,120,120)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(65,65,65))
         })
         gradient.Parent = stroke
+
+        task.spawn(function()
+            local rotation = 0
+            while targetWindow.Parent and stroke.Parent and gradient.Parent do
+                rotation = (rotation + 1.5) % 360
+                gradient.Rotation = rotation
+                RunService.RenderStepped:Wait()
+            end
+        end)
     end
 end)
 
--- 主UI边框动态效果：沿用 XION 的渐变边框思路，只把颜色改成灰色。
+-- 主标题/作者文字颜色：直接修改 WindUI 实际创建出来的 TextLabel。
 pcall(function()
     local CoreGui = game:GetService("CoreGui")
-    local RunService = game:GetService("RunService")
-    local targetWindow
-    for _, obj in ipairs(CoreGui:GetDescendants()) do
-        if obj:IsA("TextLabel") and obj.Text == "奶龙_HUB" then
-            local parent = obj.Parent
-            for _ = 1, 8 do
-                if not parent then break end
-                if parent:IsA("Frame") then
-                    local size = parent.AbsoluteSize
-                    if size.X > 300 and size.Y > 150 then targetWindow = parent break end
+    local function recolor(root)
+        for _, obj in ipairs(root:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+                if obj.Text == "奶龙_HUB" then
+                    obj.TextColor3 = Color3.fromRGB(155,155,155)
+                elseif obj.Text == "@墨水依旧 司空" then
+                    obj.TextColor3 = Color3.fromRGB(125,125,125)
                 end
-                parent = parent.Parent
             end
-            if targetWindow then break end
         end
     end
-    if targetWindow then
-        local stroke = targetWindow:FindFirstChild("NailongGrayMainBorder")
-        if stroke and stroke:IsA("UIStroke") then
-            local grad = stroke:FindFirstChild("NailongGrayBorderGradient")
-            if not grad then
-                grad = Instance.new("UIGradient")
-                grad.Name = "NailongGrayBorderGradient"
-                grad.Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,70)),
-                    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120,120,120)),
-                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180,180,180)),
-                    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120,120,120)),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(70,70,70))
-                })
-                grad.Parent = stroke
-            end
-            task.spawn(function()
-                local rotation = 0
-                while targetWindow and targetWindow.Parent and stroke.Parent do
-                    rotation = (rotation + 1.2) % 360
-                    grad.Rotation = rotation
-                    RunService.RenderStepped:Wait()
-                end
-            end)
-        end
-    end
+    recolor(CoreGui)
+    task.delay(0.25, function() pcall(function() recolor(CoreGui) end) end)
+    task.delay(0.8, function() pcall(function() recolor(CoreGui) end) end)
 end)
 
 -- 左下角信息检测：参考 XION 的信息显示思路，改成奶龙_HUB 灰色风格。
