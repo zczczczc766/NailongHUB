@@ -91,18 +91,20 @@ if not B then
 end
 
 
--- 全局灰色主题：主窗口、控件、文字/图标与边框统一为灰色风格。
--- 使用 WindUI 1.6.66 支持的 AddTheme + CreateWindow Theme 参数。
+-- 灰色主题：统一主窗口、按钮、边框、文字和图标的灰色风格。
 pcall(function()
     B:AddTheme({
-        Name = "NailongGrey",
-        Accent = Color3.fromRGB(125, 125, 125),
-        Background = Color3.fromRGB(24, 24, 24),
-        Outline = Color3.fromRGB(105, 105, 105),
+        Name = "NailongGray",
+        Accent = Color3.fromRGB(105, 105, 105),
+        Dialog = Color3.fromRGB(32, 32, 32),
+        Outline = Color3.fromRGB(125, 125, 125),
         Text = Color3.fromRGB(235, 235, 235),
-        Placeholder = Color3.fromRGB(130, 130, 130),
-        Button = Color3.fromRGB(55, 55, 55),
+        Placeholder = Color3.fromRGB(145, 145, 145),
+        Background = Color3.fromRGB(24, 24, 24),
+        Button = Color3.fromRGB(58, 58, 58),
         Icon = Color3.fromRGB(190, 190, 190),
+          Title = Color3.fromRGB(155, 155, 155),
+          Author = Color3.fromRGB(145, 145, 145),
     })
 end)
 
@@ -117,7 +119,7 @@ local windowOk, windowResult = pcall(function()
         Folder = "奶龙_HUB",
         NewElements = true,
         HideSearchBar = false,
-        Theme = "NailongGrey",
+        Theme = "NailongGray",
     })
 end)
 
@@ -142,6 +144,8 @@ pcall(function()
         Title = "奶龙_HUB",
         Icon = "crown",
         StrokeThickness = 2,
+        TextColor = Color3.fromRGB(150, 150, 150),
+        TitleColor = Color3.fromRGB(150, 150, 150),
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 90, 90)),
             ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
